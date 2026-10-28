@@ -1,6 +1,7 @@
 import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
+import "dotenv/config";
 
 const DATA_DIR = path.resolve("./data");
 if (!fs.existsSync(DATA_DIR)) {
@@ -30,6 +31,9 @@ export function initDatabase() {
       duration REAL DEFAULT 0,
       bitrate INTEGER DEFAULT 0,
       cover_hash TEXT,
+      file_size INTEGER DEFAULT 0,
+      mtime REAL DEFAULT 0,
+      storage_source TEXT DEFAULT 'local',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
@@ -90,6 +94,18 @@ export function initDatabase() {
 
     CREATE INDEX IF NOT EXISTS idx_playlist_tracks_pid ON playlist_tracks(playlist_id);
   `);
+
+  // Safe runtime migrations for existing databases
+  const cols = db.pragma("table_info(tracks)").map((c) => c.name);
+  if (!cols.includes("file_size")) {
+    db.exec("ALTER TABLE tracks ADD COLUMN file_size INTEGER DEFAULT 0");
+  }
+  if (!cols.includes("mtime")) {
+    db.exec("ALTER TABLE tracks ADD COLUMN mtime REAL DEFAULT 0");
+  }
+  if (!cols.includes("storage_source")) {
+    db.exec("ALTER TABLE tracks ADD COLUMN storage_source TEXT DEFAULT 'local'");
+  }
 
   console.log("Database initialized at", DB_PATH);
 }

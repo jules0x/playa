@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Playa — Spaces Audio Vault Architecture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#0e1117',
+        primaryColor: '#6366f1',
+        primaryTextColor: '#f8fafc',
+        primaryBorderColor: '#4f46e5',
+        lineColor: '#818cf8',
+        secondaryColor: '#1e293b',
+        tertiaryColor: '#0f172a'
+      }
+    });
+  </script>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(18, 24, 38, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.2);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #a5b4fc;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin: 36px 0 16px 0;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h3 {
+      font-size: 1.15rem;
+      margin: 24px 0 10px 0;
+      color: #c7d2fe;
+    }
+    p { margin-bottom: 16px; color: var(--text-muted); }
+    strong { color: #f1f5f9; }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    .diagram-card {
+      display: flex;
+      justify-content: center;
+      padding: 32px 16px;
+      background: #0d131f;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--card-border);
+    }
+    th {
+      background: rgba(255, 255, 255, 0.03);
+      color: #f1f5f9;
+      font-weight: 600;
+    }
+    pre {
+      background: #050811;
+      border: 1px solid var(--card-border);
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      color: #e2e8f0;
+      margin-bottom: 16px;
+    }
+    .tip-box {
+      border-left: 4px solid var(--accent);
+      background: rgba(99, 102, 241, 0.08);
+      padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+    }
+    .tip-title {
+      font-weight: 600;
+      color: #a5b4fc;
+      margin-bottom: 6px;
+    }
+    ul { margin: 12px 0 16px 24px; color: var(--text-muted); }
+    li { margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">Architecture Blueprint</span>
+      <h1 style="margin-top: 12px;">DigitalOcean Spaces Audio Vault & Catalog System</h1>
+      <p>Decoupled high-performance cloud media streaming architecture for Playa</p>
+    </header>
+
+    <h2>1. System Architecture Diagram</h2>
+    <p>How audio streaming and metadata caching decouple for sub-50ms UI response times:</p>
+    
+    <div class="card diagram-card">
+      <div class="mermaid">
+graph TD
+    subgraph "Storage & Cloud (DigitalOcean)"
+        S3["DO Spaces Bucket: 'playa' (syd1)"]
+        CDN["DO Spaces CDN (Edge Cache)"]
+        S3 --> CDN
+    end
+
+    subgraph "Playa Backend & Indexer"
+        Scanner["Incremental Metadata Scanner"]
+        RangeReader["Smart Byte-Range Header Reader"]
+        Catalog["vault-catalog.json (Indexed Cache)"]
+        Covers["/covers Cache (Extracted Artwork)"]
+        
+        Scanner -->|1. List objects & ETags| S3
+        Scanner -->|2. Fetch first 192KB| RangeReader
+        RangeReader -->|Fetch header bytes| S3
+        Scanner -->|3. Extract ID3 tags| Catalog
+        Scanner -->|4. Save APIC artwork| Covers
+    end
+
+    subgraph "Playa Frontend (Browser)"
+        UI["Vault UI & Search (< 50ms)"]
+        AudioEngine["HTML5 Audio Engine (&lt;audio&gt;)"]
+        
+        Catalog -->|Instant payload load| UI
+        CDN -->|HTTP 206 Byte-Range Stream| AudioEngine
+        Covers -->|Album art images| UI
+    end
+      </div>
+    </div>
+
+    <h2>2. Incremental Sync Workflow Diagram</h2>
+    <p>How the scanner checks for new albums in seconds without downloading multi-gigabyte audio files:</p>
+
+    <div class="card diagram-card">
+      <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant App as Scanner Engine
+    participant S3 as DO Spaces API
+    participant Cache as Existing vault-catalog.json
+
+    App->>Cache: Load existing tracks & ETags
+    App->>S3: ListObjectsV2 (recursive)
+    S3-->>App: List of (Key, ETag, Size, LastModified)
+    
+    loop For each object in S3
+        alt Key exists in catalog AND ETag matches
+            App->>App: Retain existing metadata (0ms, no network call)
+        else Object is new OR ETag changed
+            App->>S3: Read byte-range header (0-192KB)
+            App->>App: Parse ID3 / FLAC metadata & extract cover
+            App->>App: Add/Update track in catalog
+        end
+    end
+
+    App->>App: Remove catalog entries whose S3 Keys no longer exist
+    App->>Cache: Save updated vault-catalog.json
+      </div>
+    </div>
+
+    <h2>3. The Secret: Smart Range-Read Strategy</h2>
+    <div class="tip-box">
+      <div class="tip-title">⚡ 99.8% Bandwidth Reduction</div>
+      Audio metadata (ID3v2 tags, Vorbis comments, FLAC headers) lives at the <strong>very beginning</strong> of the file (first 64KB–192KB). Instead of downloading entire multi-megabyte files, the scanner issues a single HTTP Range request: <code>Range: bytes=0-196607</code>.
+    </div>
+
+    <pre><code>async function fetchHeaderChunk(bucket, key) {
+  const command = new GetObjectCommand({
+    Bucket: bucket,
+    Key: key,
+    Range: "bytes=0-196607", // Only fetch the first 192KB!
+  });
+  const response = await s3Client.send(command);
+  return streamToBuffer(response.Body);
+}</code></pre>
+
+    <h2>4. Streaming Protocols Comparison</h2>
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <table>
+        <thead>
+          <tr>
+            <th>Option</th>
+            <th>Method</th>
+            <th>Latency</th>
+            <th>Pros</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>A. Spaces CDN (Public)</strong></td>
+            <td>Direct CDN URLs</td>
+            <td>⚡ &lt; 30ms</td>
+            <td>Edge cached worldwide, instant scrubbing, 0 server load</td>
+          </tr>
+          <tr>
+            <td><strong>B. Presigned S3 URLs</strong></td>
+            <td>Temporary signed URLs</td>
+            <td>⚡ &lt; 60ms</td>
+            <td>Space remains 100% private</td>
+          </tr>
+          <tr>
+            <td><strong>C. Streaming Proxy</strong></td>
+            <td>Local HTTP 206 pipe</td>
+            <td>🟡 Medium</td>
+            <td>Complete custom auth control</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>5. Implementation Roadmap</h2>
+    <div class="card">
+      <h3>Phase 1: Core Scanner Module</h3>
+      <ul>
+        <li>Implement <code>scanner.js</code> using <code>@aws-sdk/client-s3</code> and <code>music-metadata</code>.</li>
+        <li>Support MP3, FLAC, WAV, AAC, M4A, OGG.</li>
+        <li>Extract embedded cover art to <code>/covers/</code>.</li>
+      </ul>
+
+      <h3>Phase 2: Synchronization & API Layer</h3>
+      <ul>
+        <li>Add <code>POST /api/vault/rescan</code> endpoint.</li>
+        <li>Stream progress via Server-Sent Events (SSE).</li>
+        <li>Serve cached <code>vault-catalog.json</code> to frontend.</li>
+      </ul>
+
+      <h3>Phase 3: Player Integration</h3>
+      <ul>
+        <li>Bind HTML5 <code>&lt;audio&gt;</code> engine to Spaces CDN stream URLs.</li>
+        <li>Add "Sync Vault" button with live status updates.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
