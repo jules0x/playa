@@ -1085,6 +1085,12 @@
     }
   });
 
+  audio.addEventListener('error', () => {
+    state.isPlaying = false;
+    updatePlayerUI();
+    showToast('⚠️ Track audio file not found. Add your DigitalOcean Spaces env vars to stream audio.');
+  });
+
   // Scrubber Seeking
   scrubberBar.addEventListener('click', (e) => {
     if (!audio.duration) return;

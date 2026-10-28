@@ -72,11 +72,33 @@ fastify.get("/api/stream/:id", async (req, reply) => {
       if (presignedUrl) {
         return reply.redirect(presignedUrl);
       }
+    } else {
+      return reply.status(503).send({
+        error: "Spaces not configured",
+        message: "DigitalOcean Spaces environment variables are not set on Render. Please configure SPACES_KEY, SPACES_SECRET, SPACES_BUCKET, and SPACES_ENDPOINT."
+      });
+    }
+  }
+
+  // If local file is missing but Spaces is configured, try streaming from Spaces object key
+  if (isSpacesConfigured() && !fs.existsSync(track.file_path)) {
+    const match = track.file_path.match(/(?:sample_music|music|audio)\/(.+)$/i);
+    const candidateKey = match ? match[1] : path.basename(track.file_path);
+    try {
+      const presignedUrl = await getPresignedStreamUrl(candidateKey);
+      if (presignedUrl) {
+        return reply.redirect(presignedUrl);
+      }
+    } catch (e) {
+      // proceed to 404
     }
   }
 
   if (!fs.existsSync(track.file_path)) {
-    return reply.status(404).send({ error: "Track file not found on disk" });
+    return reply.status(404).send({
+      error: "Track file not found on disk",
+      message: "Audio files are not stored on Render's ephemeral disk. Please add your DigitalOcean Spaces environment variables to stream from your Spaces bucket."
+    });
   }
 
   const filePath = track.file_path;
