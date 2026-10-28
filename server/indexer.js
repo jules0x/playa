@@ -4,7 +4,8 @@ import crypto from "crypto";
 import * as mm from "music-metadata";
 import { db, initDatabase } from "./db.js";
 
-const COVERS_DIR = path.resolve("./data/covers");
+const DATA_DIR = process.env.DATA_DIR || path.resolve("./data");
+const COVERS_DIR = path.join(DATA_DIR, "covers");
 if (!fs.existsSync(COVERS_DIR)) {
   fs.mkdirSync(COVERS_DIR, { recursive: true });
 }

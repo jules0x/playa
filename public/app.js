@@ -414,20 +414,9 @@
       // Add 'Clear All' pill in top bar
       const clearAllPill = document.createElement('button');
       clearAllPill.className = 'clear-all-pill-btn';
-      clearAllPill.textContent = 'Clear All Filters';
+      clearAllPill.textContent = 'Clear All';
       clearAllPill.onclick = clearAllFilters;
       activeFiltersContainer.appendChild(clearAllPill);
-
-      // Show in-view active filter banner
-      if (filterBanner && filterBannerDesc) {
-        filterBanner.style.display = 'flex';
-        const labels = activeList.map(item => `<strong>${item.label}</strong>`).join(' &bull; ');
-        const countText = state.stats?.total_tracks ? `(${state.stats.total_tracks} matching tracks)` : '';
-        filterBannerDesc.innerHTML = `${labels} <span style="opacity:0.8; margin-left:6px;">${countText}</span>`;
-        if (btnClearAllBanner) btnClearAllBanner.onclick = clearAllFilters;
-      }
-    } else {
-      if (filterBanner) filterBanner.style.display = 'none';
     }
   }
 

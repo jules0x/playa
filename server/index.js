@@ -6,13 +6,15 @@ import fs from "fs";
 import mime from "mime-types";
 import { db, initDatabase } from "./db.js";
 import { scanDirectory } from "./indexer.js";
+import { isSpacesConfigured, getPresignedStreamUrl } from "./s3.js";
 
 const fastify = Fastify({ logger: false });
 
 const PORT = parseInt(process.env.PORT || "3456", 10);
 const HOST = process.env.HOST || "0.0.0.0";
 const MUSIC_DIR = process.env.MUSIC_DIR || path.resolve("./sample_music");
-const COVERS_DIR = path.resolve("./data/covers");
+const DATA_DIR = process.env.DATA_DIR || path.resolve("./data");
+const COVERS_DIR = path.join(DATA_DIR, "covers");
 const PUBLIC_DIR = path.resolve("./public");
 
 // Ensure dirs
@@ -52,13 +54,28 @@ const DEFAULT_COVER_SVG = `
 </svg>
 `.trim();
 
-// 1. Audio Streaming Endpoint with Full HTTP Range Support
+// 1. Audio Streaming Endpoint with Full HTTP Range Support & S3 Pre-signed Streaming
 fastify.get("/api/stream/:id", async (req, reply) => {
   const { id } = req.params;
   const track = db.prepare("SELECT file_path FROM tracks WHERE id = ?").get(id);
 
-  if (!track || !fs.existsSync(track.file_path)) {
-    return reply.status(404).send({ error: "Track file not found" });
+  if (!track) {
+    return reply.status(404).send({ error: "Track not found" });
+  }
+
+  // If track is stored in DigitalOcean Spaces / S3
+  if (track.file_path.startsWith("s3://") || track.file_path.startsWith("spaces://")) {
+    const objectKey = track.file_path.replace(/^(s3|spaces):\/\/[^/]+\//, "").replace(/^(s3|spaces):\/\//, "");
+    if (isSpacesConfigured()) {
+      const presignedUrl = await getPresignedStreamUrl(objectKey);
+      if (presignedUrl) {
+        return reply.redirect(presignedUrl);
+      }
+    }
+  }
+
+  if (!fs.existsSync(track.file_path)) {
+    return reply.status(404).send({ error: "Track file not found on disk" });
   }
 
   const filePath = track.file_path;

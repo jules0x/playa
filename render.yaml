@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: playa-vault
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: PORT
+        value: 10000
+      - key: DATA_DIR
+        value: /var/data
+      - key: DO_SPACES_KEY
+        sync: false
+      - key: DO_SPACES_SECRET
+        sync: false
+      - key: DO_SPACES_ENDPOINT
+        sync: false # e.g. nyc3.digitaloceanspaces.com
+      - key: DO_SPACES_BUCKET
+        sync: false # e.g. my-music-vault
+      - key: DO_SPACES_REGION
+        value: us-east-1
+    disk:
+      name: playa-data
+      mountPath: /var/data
+      sizeGB: 1
