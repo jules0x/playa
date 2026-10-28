@@ -4,12 +4,19 @@
   --bg-card: #151b27;
   --bg-card-hover: #1c2435;
   --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-accent: rgba(0, 242, 254, 0.35);
+  --border-accent: rgba(var(--accent-rgb), 0.35);
   
+  /* Skin tokens — skins in /skins/*.css override these */
+  --accent-rgb: 0, 242, 254;
+  --accent2-rgb: 127, 0, 255;
+  --on-accent: #0a0c10;
+  --viz-a: #00f2fe;
+  --viz-b: #7f00ff;
+
   --accent-cyan: #00f2fe;
   --accent-purple: #7f00ff;
   --accent-gradient: linear-gradient(135deg, #00f2fe 0%, #7f00ff 100%);
-  --accent-gradient-subtle: linear-gradient(135deg, rgba(0, 242, 254, 0.15) 0%, rgba(127, 0, 255, 0.15) 100%);
+  --accent-gradient-subtle: linear-gradient(135deg, rgba(var(--accent-rgb), 0.15) 0%, rgba(var(--accent2-rgb), 0.15) 100%);
   
   --text-main: #f0f4fc;
   --text-muted: #8b9bb4;
@@ -77,8 +84,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #0a0c10;
-  box-shadow: 0 4px 18px rgba(0, 242, 254, 0.3);
+  color: var(--on-accent);
+  box-shadow: 0 4px 18px rgba(var(--accent-rgb), 0.3);
 }
 
 .brand-text h1 {
@@ -96,10 +103,10 @@ body {
   font-weight: 600;
   letter-spacing: 0.8px;
   color: var(--accent-cyan);
-  background: rgba(0, 242, 254, 0.1);
+  background: rgba(var(--accent-rgb), 0.1);
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid rgba(0, 242, 254, 0.25);
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
   display: inline-block;
 }
 
@@ -204,17 +211,17 @@ body {
 }
 
 .decade-chip:hover {
-  border-color: rgba(0, 242, 254, 0.3);
+  border-color: rgba(var(--accent-rgb), 0.3);
   color: var(--text-main);
   background: var(--bg-card-hover);
 }
 
 .decade-chip.active {
-  background: rgba(0, 242, 254, 0.2);
+  background: rgba(var(--accent-rgb), 0.2);
   border: 1.5px solid var(--accent-cyan);
   color: #fff;
   font-weight: 700;
-  box-shadow: 0 0 16px rgba(0, 242, 254, 0.45);
+  box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.45);
 }
 
 .decade-chip.active .subcount {
@@ -261,16 +268,16 @@ body {
 }
 
 .genre-badge:hover {
-  border-color: rgba(127, 0, 255, 0.4);
+  border-color: rgba(var(--accent2-rgb), 0.4);
   color: var(--text-main);
 }
 
 .genre-badge.active {
-  background: linear-gradient(135deg, rgba(0, 242, 254, 0.3) 0%, rgba(127, 0, 255, 0.4) 100%);
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.3) 0%, rgba(var(--accent2-rgb), 0.4) 100%);
   border: 1.5px solid var(--accent-cyan);
   color: #fff;
   font-weight: 700;
-  box-shadow: 0 0 14px rgba(127, 0, 255, 0.45), 0 0 8px rgba(0, 242, 254, 0.3);
+  box-shadow: 0 0 14px rgba(var(--accent2-rgb), 0.45), 0 0 8px rgba(var(--accent-rgb), 0.3);
 }
 
 .genre-badge.zero-count {
@@ -373,7 +380,7 @@ body {
 
 .search-box:focus-within {
   border-color: var(--accent-cyan);
-  box-shadow: 0 0 14px rgba(0, 242, 254, 0.2);
+  box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.2);
   color: var(--accent-cyan);
 }
 
@@ -404,7 +411,7 @@ body {
 }
 
 .active-pill {
-  background: linear-gradient(135deg, rgba(0, 242, 254, 0.22) 0%, rgba(127, 0, 255, 0.25) 100%);
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.22) 0%, rgba(var(--accent2-rgb), 0.25) 100%);
   border: 1.5px solid var(--accent-cyan);
   color: #fff;
   font-size: 0.82rem;
@@ -414,7 +421,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 0 14px rgba(0, 242, 254, 0.35);
+  box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.35);
   animation: filterFadeIn 0.2s ease;
   white-space: nowrap;
 }
@@ -458,8 +465,8 @@ body {
 
 /* In-View Active Filter Alert Banner */
 .active-filter-banner {
-  background: linear-gradient(90deg, rgba(0, 242, 254, 0.12) 0%, rgba(127, 0, 255, 0.15) 100%);
-  border: 1.5px solid rgba(0, 242, 254, 0.45);
+  background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.12) 0%, rgba(var(--accent2-rgb), 0.15) 100%);
+  border: 1.5px solid rgba(var(--accent-rgb), 0.45);
   border-radius: var(--radius-md);
   padding: 12px 18px;
   margin-bottom: 20px;
@@ -467,7 +474,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 16px rgba(0, 242, 254, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 16px rgba(var(--accent-rgb), 0.15);
   animation: filterFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -616,7 +623,7 @@ body {
 .album-card:hover {
   transform: translateY(-4px);
   border-color: var(--border-accent);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5), 0 0 16px rgba(0, 242, 254, 0.15);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5), 0 0 16px rgba(var(--accent-rgb), 0.15);
   background: var(--bg-card-hover);
 }
 
@@ -652,7 +659,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #0a0c10;
+  color: var(--on-accent);
   opacity: 0;
   transform: translateY(8px);
   transition: all 0.25s ease;
@@ -692,7 +699,7 @@ body {
 }
 
 .badge-decade {
-  background: rgba(0, 242, 254, 0.1);
+  background: rgba(var(--accent-rgb), 0.1);
   color: var(--accent-cyan);
   padding: 2px 6px;
   border-radius: 4px;
@@ -1038,15 +1045,15 @@ body {
   height: 40px;
   border-radius: 50%;
   background: var(--accent-gradient);
-  color: #0a0c10;
-  box-shadow: 0 4px 14px rgba(0, 242, 254, 0.35);
+  color: var(--on-accent);
+  box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.35);
   transition: transform 0.15s, box-shadow 0.15s;
 }
 
 .play-main-btn:hover {
   transform: scale(1.08);
-  box-shadow: 0 6px 20px rgba(0, 242, 254, 0.5);
-  color: #0a0c10;
+  box-shadow: 0 6px 20px rgba(var(--accent-rgb), 0.5);
+  color: var(--on-accent);
 }
 
 /* Scrubber */
@@ -1198,7 +1205,7 @@ body {
 }
 .th-sortable:hover {
   color: var(--accent-cyan);
-  background: rgba(0, 242, 254, 0.04);
+  background: rgba(var(--accent-rgb), 0.04);
 }
 .sort-indicator {
   font-size: 0.62rem;
@@ -1228,7 +1235,7 @@ body {
 .btn-add-track-playlist:hover {
   border-color: var(--accent-cyan);
   color: var(--accent-cyan);
-  background: rgba(0, 242, 254, 0.1);
+  background: rgba(var(--accent-rgb), 0.1);
   transform: scale(1.1);
 }
 
@@ -1258,12 +1265,12 @@ body {
 .album-add-playlist-btn:hover {
   color: var(--accent-cyan);
   border-color: var(--accent-cyan);
-  background: rgba(0, 242, 254, 0.2);
+  background: rgba(var(--accent-rgb), 0.2);
 }
 
 /* --- Playlists in Sidebar --- */
 .new-playlist-btn {
-  background: rgba(0, 242, 254, 0.1);
+  background: rgba(var(--accent-rgb), 0.1);
   border: 1px solid var(--border-accent);
   color: var(--accent-cyan);
   font-family: var(--font-mono);
@@ -1276,8 +1283,8 @@ body {
 }
 .new-playlist-btn:hover {
   background: var(--accent-cyan);
-  color: #0a0c10;
-  box-shadow: 0 0 10px rgba(0, 242, 254, 0.4);
+  color: var(--on-accent);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.4);
 }
 
 .playlists-nav-list {
@@ -1372,7 +1379,7 @@ body {
 }
 .btn-primary {
   background: var(--accent-gradient);
-  color: #0a0c10;
+  color: var(--on-accent);
   border: none;
   font-family: var(--font-main);
   font-size: 0.9rem;
@@ -1387,7 +1394,7 @@ body {
 }
 .btn-primary:hover {
   transform: scale(1.04);
-  box-shadow: 0 4px 18px rgba(0, 242, 254, 0.4);
+  box-shadow: 0 4px 18px rgba(var(--accent-rgb), 0.4);
 }
 .btn-danger-outline {
   background: transparent;
@@ -1437,7 +1444,7 @@ body {
   border-radius: var(--radius-lg);
   width: 420px;
   max-width: 90vw;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 24px rgba(0, 242, 254, 0.2);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 24px rgba(var(--accent-rgb), 0.2);
   overflow: hidden;
 }
 .modal-header {
@@ -1487,7 +1494,7 @@ body {
 }
 .btn-primary-sm {
   background: var(--accent-cyan);
-  color: #0a0c10;
+  color: var(--on-accent);
   border: none;
   font-weight: 700;
   padding: 0 16px;
@@ -1538,7 +1545,7 @@ body {
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 500;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 12px rgba(0, 242, 254, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 12px rgba(var(--accent-rgb), 0.3);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.25s, transform 0.25s;
@@ -1559,8 +1566,8 @@ body {
   width: 100%;
   max-width: 380px;
   background: rgba(18, 22, 33, 0.95);
-  border: 1px solid rgba(0, 242, 254, 0.35);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 242, 254, 0.15);
+  border: 1px solid rgba(var(--accent-rgb), 0.35);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(var(--accent-rgb), 0.15);
   border-radius: var(--radius-md);
   padding: 32px 28px;
   text-align: center;
@@ -1575,13 +1582,13 @@ body {
   height: 64px;
   margin: 0 auto 16px;
   border-radius: 50%;
-  background: rgba(0, 242, 254, 0.1);
-  border: 1px solid rgba(0, 242, 254, 0.3);
+  background: rgba(var(--accent-rgb), 0.1);
+  border: 1px solid rgba(var(--accent-rgb), 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--accent-cyan);
-  box-shadow: 0 0 20px rgba(0, 242, 254, 0.2);
+  box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.2);
 }
 .lock-title {
   font-size: 1.35rem;
@@ -1618,7 +1625,7 @@ body {
 .lock-input-wrap input:focus {
   outline: none;
   border-color: var(--accent-cyan);
-  box-shadow: 0 0 12px rgba(0, 242, 254, 0.25);
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.25);
 }
 .btn-toggle-eye {
   position: absolute;
@@ -1654,19 +1661,19 @@ body {
   gap: 8px;
   padding: 12px;
   background: linear-gradient(135deg, var(--accent-cyan), #4facfe);
-  color: #0b0f19;
+  color: var(--on-accent);
   font-weight: 600;
   font-size: 0.92rem;
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 14px rgba(0, 242, 254, 0.35);
+  box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.35);
 }
 .btn-unlock-vault:hover {
   filter: brightness(1.1);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0, 242, 254, 0.45);
+  box-shadow: 0 6px 18px rgba(var(--accent-rgb), 0.45);
 }
 .btn-unlock-vault:active {
   transform: translateY(0);
@@ -1680,3 +1687,193 @@ body {
   40%, 80% { transform: translateX(8px); }
 }
 
+/* --- Header Actions & Skin Picker --- */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.skin-picker {
+  position: relative;
+}
+.skin-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 250px;
+  padding: 8px;
+  background: rgba(16, 20, 29, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  z-index: 150;
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  transform-origin: top right;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.skin-menu.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.skin-menu-label {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: var(--text-dim);
+  padding: 6px 8px 8px;
+}
+.skin-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.skin-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.skin-option.active {
+  border-color: rgba(var(--accent-rgb), 0.4);
+  background: rgba(var(--accent-rgb), 0.08);
+}
+.skin-swatch {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.skin-option-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.skin-option-name {
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+.skin-option-desc {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+.skin-check {
+  color: var(--accent-cyan);
+  font-size: 0.85rem;
+  opacity: 0;
+}
+.skin-option.active .skin-check {
+  opacity: 1;
+}
+
+/* Repeat-one indicator (replaces inline color set from JS) */
+.btn-ctrl.repeat-one {
+  position: relative;
+}
+.btn-ctrl.repeat-one::after {
+  content: '1';
+  position: absolute;
+  top: -6px;
+  right: -7px;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 1px 3px;
+  border-radius: 6px;
+  background: var(--accent-cyan);
+  color: var(--on-accent);
+}
+
+/* --- Playlists Temporarily Hidden --- */
+#sidebar-playlists-section,
+.th-actions,
+.btn-add-track-playlist,
+.album-add-playlist-btn,
+#playlist-modal,
+#view-playlist {
+  display: none !important;
+}
+
+/* --- Clear Tags & Pill Alignment --- */
+.clear-all-pill-btn {
+  flex-shrink: 0;
+  margin-right: 6px;
+}
+.active-pill {
+  flex-shrink: 0;
+}
+
+/* --- Tracks Page Shuffle Button --- */
+.view-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.btn-tracks-shuffle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-tracks-shuffle:hover {
+  border-color: var(--border-accent);
+  color: var(--text-main);
+  background: var(--bg-card-hover);
+}
+.btn-tracks-shuffle.active {
+  background: rgba(var(--accent-rgb), 0.18);
+  border-color: var(--accent-cyan);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.35);
+}
+
+/* --- Interactive Player Cover & Title --- */
+.player-cover-box {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.player-cover-box:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.4);
+}
+.player-details {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.player-details:hover .player-title {
+  color: var(--accent-cyan);
+}
+
+/* --- Interactive Ambient Glow Canvas --- */
+#ambient-glow-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+}

@@ -38,7 +38,7 @@ const fastify = Fastify({ logger: false });
 
 const PORT = parseInt(process.env.PORT || "3456", 10);
 const HOST = process.env.HOST || "0.0.0.0";
-const MUSIC_DIR = process.env.MUSIC_DIR || path.resolve("./sample_music");
+const MUSIC_DIR = process.env.MUSIC_DIR || process.env.LOCAL_MOUNT_DIR || path.resolve("./sample_music");
 const DATA_DIR = process.env.DATA_DIR || path.resolve("./data");
 const COVERS_DIR = path.join(DATA_DIR, "covers");
 const PUBLIC_DIR = path.resolve("./public");
@@ -475,7 +475,10 @@ function buildFilterConditions(query, excludeKey = null) {
 fastify.get("/api/decades", async (req) => {
   const { joinFts, whereClause, params } = buildFilterConditions(req.query, "decade");
   const sql = `
-    SELECT tracks.decade, COUNT(*) as track_count, COUNT(DISTINCT tracks.album) as album_count
+    SELECT tracks.decade, 
+           COUNT(*) as track_count, 
+           COUNT(DISTINCT tracks.album) as album_count,
+           COUNT(DISTINCT tracks.artist) as artist_count
     FROM tracks
     ${joinFts}
     ${whereClause}
@@ -490,7 +493,10 @@ fastify.get("/api/decades", async (req) => {
 fastify.get("/api/genres", async (req) => {
   const { joinFts, whereClause, params } = buildFilterConditions(req.query, "genre");
   const sql = `
-    SELECT tracks.genre, COUNT(*) as track_count
+    SELECT tracks.genre, 
+           COUNT(*) as track_count,
+           COUNT(DISTINCT tracks.album) as album_count,
+           COUNT(DISTINCT tracks.artist) as artist_count
     FROM tracks
     ${joinFts}
     ${whereClause}

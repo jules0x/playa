@@ -23,7 +23,12 @@ function cleanString(str, fallback = "") {
 }
 
 export function isDateBatchFolder(name) {
-  return /^\d{8}$/.test(name) || /^\d{4}[-_]\d{2}[-_]\d{2}$/.test(name);
+  if (!name) return false;
+  return (
+    /^\d{8}$/.test(name) ||
+    /^\d{4}[-_]\d{2}[-_]\d{2}$/.test(name) ||
+    /^(batch|chunk|upload|part)[-_]?\d+$/i.test(name)
+  );
 }
 
 /**
@@ -156,15 +161,15 @@ function extractCoverArt(picture, albumDir, albumCoverCache) {
   return null;
 }
 
-export async function scanDirectory(targetDir, options = {}) {
+export async function scanDirectory(targetInput, options = {}) {
   initDatabase();
   const startTime = Date.now();
-  console.log(`\n🎧 Starting vault scan of: ${targetDir}`);
 
-  if (!fs.existsSync(targetDir)) {
-    console.error(`❌ Target directory ${targetDir} does not exist!`);
-    return { count: 0, indexedCount: 0, skippedCount: 0, errorCount: 0 };
-  }
+  const targets = (Array.isArray(targetInput) ? targetInput : String(targetInput).split(/[,;]/))
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  console.log(`\n🎧 Starting vault scan of: ${targets.join(", ")}`);
 
   const supportedExtensions = new Set([".mp3", ".flac", ".ogg", ".m4a", ".wav", ".aac"]);
   const filesToProcess = [];
@@ -189,7 +194,25 @@ export async function scanDirectory(targetDir, options = {}) {
     }
   }
 
-  walk(targetDir);
+  for (const targetDir of targets) {
+    if (!fs.existsSync(targetDir)) {
+      console.error(`❌ Target directory ${targetDir} does not exist!`);
+      continue;
+    }
+
+    try {
+      const rootEntries = fs.readdirSync(targetDir, { withFileTypes: true });
+      const subdirs = rootEntries.filter((e) => e.isDirectory() && !e.name.startsWith(".")).map((e) => e.name);
+      if (subdirs.length > 0) {
+        console.log(`📁 Found ${subdirs.length} subfolders in ${targetDir}: ${subdirs.slice(0, 10).join(", ")}${subdirs.length > 10 ? "..." : ""}`);
+      }
+    } catch (err) {
+      // ignore
+    }
+
+    walk(targetDir);
+  }
+
   console.log(`📂 Found ${filesToProcess.length} audio files in vault.`);
 
   const getExistingStmt = db.prepare("SELECT file_size, mtime, cover_hash FROM tracks WHERE file_path = ?");
@@ -225,10 +248,10 @@ export async function scanDirectory(targetDir, options = {}) {
   let skippedCount = 0;
   let errorCount = 0;
 
-  const isSpaces = targetDir.includes("spaces_mount") || targetDir.includes("playa");
-  const storageSource = isSpaces ? "spaces" : "local";
-
   for (const filePath of filesToProcess) {
+    const isSpaces = filePath.includes("spaces_mount") || filePath.includes("playa");
+    const storageSource = isSpaces ? "spaces" : "local";
+
     try {
       const stats = fs.statSync(filePath);
       const existing = getExistingStmt.get(filePath);

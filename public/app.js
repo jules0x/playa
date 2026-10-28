@@ -22,6 +22,9 @@
       album: null,
       search: ''
     },
+    activeAlbumScope: null,
+    playbackContext: null,
+    isTracksShuffled: false,
     stats: {},
     decades: [],
     genres: [],
@@ -129,6 +132,17 @@
   const miniCanvas = document.getElementById('mini-visualizer');
   const miniCtx = miniCanvas ? miniCanvas.getContext('2d') : null;
 
+  // Visualizer colours come from the active skin's CSS tokens
+  const vizColors = { a: '#00f2fe', b: '#7f00ff', accentRgb: '0, 242, 254' };
+  function refreshVizColors() {
+    const cs = getComputedStyle(document.documentElement);
+    vizColors.a = cs.getPropertyValue('--viz-a').trim() || vizColors.a;
+    vizColors.b = cs.getPropertyValue('--viz-b').trim() || vizColors.b;
+    vizColors.accentRgb = cs.getPropertyValue('--accent-rgb').trim() || vizColors.accentRgb;
+  }
+  refreshVizColors();
+  window.addEventListener('playa:skinchange', refreshVizColors);
+
   function initAudioContext() {
     if (audioCtx) return;
     try {
@@ -165,8 +179,8 @@
       for (let i = 0; i < bufferLength; i++) {
         const barHeight = (dataArray[i] / 255) * h;
         const grad = waveformCtx.createLinearGradient(0, h, 0, 0);
-        grad.addColorStop(0, '#00f2fe');
-        grad.addColorStop(1, '#7f00ff');
+        grad.addColorStop(0, vizColors.a);
+        grad.addColorStop(1, vizColors.b);
 
         waveformCtx.fillStyle = grad;
         waveformCtx.fillRect(x, h - barHeight, barWidth - 2, barHeight);
@@ -183,7 +197,7 @@
       const radius = 6 + (avg / 255) * 16;
       miniCtx.beginPath();
       miniCtx.arc(mw / 2, mh / 2, radius, 0, Math.PI * 2);
-      miniCtx.fillStyle = `rgba(0, 242, 254, ${(avg / 255) * 0.35})`;
+      miniCtx.fillStyle = `rgba(${vizColors.accentRgb}, ${(avg / 255) * 0.35})`;
       miniCtx.fill();
     } else if (miniCtx && miniCanvas) {
       miniCtx.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
@@ -268,26 +282,36 @@
       countArtistsEl.textContent = stats.total_artists || 0;
     }
 
-    // 2. Update Decade chips with live counts
+    // Helper to get count corresponding to the currently active view
+    function getPillCount(item) {
+      if (!item) return 0;
+      if (state.activeView === 'albums') return item.album_count ?? 0;
+      if (state.activeView === 'artists') return item.artist_count ?? 0;
+      return item.track_count ?? 0;
+    }
+
+    // 2. Update Decade chips with live counts reflecting the active view
     if (dynamicDecades) {
+      state.decades = dynamicDecades;
       const countsMap = {};
-      dynamicDecades.forEach(d => { countsMap[d.decade] = d.track_count; });
+      dynamicDecades.forEach(d => { countsMap[d.decade] = getPillCount(d); });
       decadesContainer.querySelectorAll('.decade-chip').forEach(chip => {
         const decName = chip.dataset.decade;
-        const count = countsMap[decName] || 0;
+        const count = countsMap[decName] ?? 0;
         const subcountEl = chip.querySelector('.subcount');
         if (subcountEl) subcountEl.textContent = count;
         chip.classList.toggle('zero-count', count === 0);
       });
     }
 
-    // 3. Update Genre badges with live counts
+    // 3. Update Genre badges with live counts reflecting the active view
     if (dynamicGenres) {
+      state.genres = dynamicGenres;
       const genreCountsMap = {};
-      dynamicGenres.forEach(g => { genreCountsMap[g.genre] = g.track_count; });
+      dynamicGenres.forEach(g => { genreCountsMap[g.genre] = getPillCount(g); });
       genresContainer.querySelectorAll('.genre-badge').forEach(badge => {
         const gName = badge.dataset.genre;
-        const count = genreCountsMap[gName] || 0;
+        const count = genreCountsMap[gName] ?? 0;
         const subcountEl = badge.querySelector('.subcount-genre');
         if (subcountEl) subcountEl.textContent = `(${count})`;
         badge.classList.toggle('zero-count', count === 0);
@@ -295,16 +319,25 @@
     }
   }
 
+  // Helper to get count corresponding to the currently active view
+  function getPillCount(item) {
+    if (!item) return 0;
+    if (state.activeView === 'albums') return item.album_count ?? 0;
+    if (state.activeView === 'artists') return item.artist_count ?? 0;
+    return item.track_count ?? 0;
+  }
+
   // Render Decades in Sidebar (with data attributes)
   function renderDecades() {
     decadesContainer.innerHTML = '';
     state.decades.forEach(d => {
+      const count = getPillCount(d);
       const chip = document.createElement('div');
-      chip.className = `decade-chip ${state.filters.decade === d.decade ? 'active' : ''}`;
+      chip.className = `decade-chip ${state.filters.decade === d.decade ? 'active' : ''} ${count === 0 ? 'zero-count' : ''}`;
       chip.dataset.decade = d.decade;
       chip.innerHTML = `
         <span>${state.filters.decade === d.decade ? '● ' : ''}${d.decade}</span>
-        <span class="subcount">${d.track_count}</span>
+        <span class="subcount">${count}</span>
       `;
       chip.onclick = () => {
         if (state.filters.decade === d.decade) {
@@ -327,12 +360,13 @@
   function renderGenres() {
     genresContainer.innerHTML = '';
     state.genres.forEach(g => {
+      const count = getPillCount(g);
       const badge = document.createElement('div');
-      badge.className = `genre-badge ${state.filters.genre === g.genre ? 'active' : ''}`;
+      badge.className = `genre-badge ${state.filters.genre === g.genre ? 'active' : ''} ${count === 0 ? 'zero-count' : ''}`;
       badge.dataset.genre = g.genre;
       badge.innerHTML = `
         <span>${state.filters.genre === g.genre ? '✓ ' : ''}${g.genre}</span>
-        <span class="subcount-genre" style="opacity:0.7; font-size:0.7rem;">(${g.track_count})</span>
+        <span class="subcount-genre" style="opacity:0.7; font-size:0.7rem;">(${count})</span>
       `;
       badge.onclick = () => {
         if (state.filters.genre === g.genre) {
@@ -385,6 +419,9 @@
     state.filters.artist = null;
     state.filters.album = null;
     state.filters.search = '';
+    state.activeAlbumScope = null;
+    const titleEl = document.getElementById('tracks-view-title');
+    if (titleEl) titleEl.textContent = 'Tracks';
     searchInput.value = '';
     searchClearBtn.style.display = 'none';
     renderDecades();
@@ -394,34 +431,23 @@
     showToast('Filters cleared');
   }
 
-  // Active Filter Pills & In-View Filter Alert Banner
+  // Active Filter Pills: Decades, Genres, and Search only (Artist and Album are not treated as filter pills)
   function updateActiveFilterPills() {
     activeFiltersContainer.innerHTML = '';
-    const { decade, genre, artist, album, search } = state.filters;
-    const filterBanner = document.getElementById('active-filter-banner');
-    const filterBannerDesc = document.getElementById('active-filter-banner-description');
-    const btnClearAllBanner = document.getElementById('btn-clear-all-banner');
+    const { decade, genre, search } = state.filters;
 
-    const activeList = [];
+    const hasActiveFilters = Boolean(decade || genre || search);
 
-    if (artist) {
-      activeList.push({ label: `Artist: ${artist}`, icon: '👤', key: 'artist' });
-      addPill('👤', `Artist: ${artist}`, () => {
-        state.filters.artist = null;
-        updateActiveFilterPills();
-        reloadActiveView();
-      });
+    if (hasActiveFilters) {
+      // Add 'Clear All' pill on the LEFT so it never gets pushed away by other pills
+      const clearAllPill = document.createElement('button');
+      clearAllPill.className = 'clear-all-pill-btn';
+      clearAllPill.textContent = 'Clear All';
+      clearAllPill.onclick = clearAllFilters;
+      activeFiltersContainer.appendChild(clearAllPill);
     }
-    if (album) {
-      activeList.push({ label: `Album: ${album}`, icon: '💿', key: 'album' });
-      addPill('💿', `Album: ${album}`, () => {
-        state.filters.album = null;
-        updateActiveFilterPills();
-        reloadActiveView();
-      });
-    }
+
     if (decade) {
-      activeList.push({ label: `Decade: ${decade}`, icon: '📅', key: 'decade' });
       addPill('📅', `Decade: ${decade}`, () => {
         state.filters.decade = null;
         renderDecades();
@@ -430,7 +456,6 @@
       });
     }
     if (genre) {
-      activeList.push({ label: `Genre: ${genre}`, icon: '⚡', key: 'genre' });
       addPill('⚡', `Genre: ${genre}`, () => {
         state.filters.genre = null;
         renderGenres();
@@ -439,7 +464,6 @@
       });
     }
     if (search) {
-      activeList.push({ label: `Search: "${search}"`, icon: '🔍', key: 'search' });
       addPill('🔍', `Search: "${search}"`, () => {
         state.filters.search = '';
         searchInput.value = '';
@@ -447,15 +471,6 @@
         updateActiveFilterPills();
         reloadActiveView();
       });
-    }
-
-    if (activeList.length > 0) {
-      // Add 'Clear All' pill in top bar
-      const clearAllPill = document.createElement('button');
-      clearAllPill.className = 'clear-all-pill-btn';
-      clearAllPill.textContent = 'Clear All';
-      clearAllPill.onclick = clearAllFilters;
-      activeFiltersContainer.appendChild(clearAllPill);
     }
   }
 
@@ -478,9 +493,14 @@
     const params = new URLSearchParams();
     if (state.filters.decade) params.set('decade', state.filters.decade);
     if (state.filters.genre) params.set('genre', state.filters.genre);
-    if (state.filters.artist) params.set('artist', state.filters.artist);
-    if (state.filters.album) params.set('album', state.filters.album);
+    if (state.filters.artist && !state.activeAlbumScope) params.set('artist', state.filters.artist);
     if (state.filters.search) params.set('search', state.filters.search);
+
+    // If scoped to a specific album, query album tracks directly without global filter pills
+    if (state.activeAlbumScope && state.activeView === 'tracks') {
+      params.set('album', state.activeAlbumScope.album);
+      params.set('artist', state.activeAlbumScope.artist);
+    }
 
     params.set('sortBy', state.sort.sortBy);
     params.set('sortOrder', state.sort.sortOrder);
@@ -554,33 +574,61 @@
         e.stopPropagation();
         const tracksData = await api(`/api/tracks?album=${encodeURIComponent(alb.album)}&artist=${encodeURIComponent(alb.artist)}`);
         if (tracksData && tracksData.tracks.length > 0) {
+          state.playbackContext = { type: 'album', album: alb.album, artist: alb.artist };
           setQueue(tracksData.tracks, 0);
         }
       };
 
       // Add album to playlist
       const addPlBtn = card.querySelector('.album-add-playlist-btn');
-      addPlBtn.onclick = (e) => {
-        e.stopPropagation();
-        openAddToPlaylistModal({ type: 'album', album: alb });
-      };
+      if (addPlBtn) {
+        addPlBtn.onclick = (e) => {
+          e.stopPropagation();
+          openAddToPlaylistModal({ type: 'album', album: alb });
+        };
+      }
 
-      // Card click opens album tracklist
+      // Card click opens album tracklist without creating filter pills
       card.onclick = () => {
-        state.filters.album = alb.album;
-        state.filters.artist = alb.artist;
-        // Clear conflicting filters
-        state.filters.decade = null;
-        state.filters.genre = null;
-        renderDecades();
-        renderGenres();
-        switchView('tracks');
-        updateActiveFilterPills();
-        reloadActiveView();
+        showAlbumTracks(alb.album, alb.artist);
       };
 
       albumsGrid.appendChild(card);
     });
+  }
+
+  // Show album tracks in tracks view without creating filter pills
+  async function showAlbumTracks(albumName, artistName, selectTrackId = null) {
+    state.activeAlbumScope = { album: albumName, artist: artistName };
+    switchView('tracks', true);
+
+    const titleEl = document.getElementById('tracks-view-title');
+    const metaEl = document.getElementById('tracks-header-meta');
+    if (titleEl) titleEl.textContent = albumName;
+    if (metaEl) metaEl.textContent = `Album by ${artistName}`;
+
+    // Reset sort indicators and tracks page shuffle
+    document.querySelectorAll('.sort-indicator').forEach(el => { el.textContent = ''; });
+    const shuffleBtn = document.getElementById('btn-tracks-page-shuffle');
+    if (shuffleBtn) shuffleBtn.classList.remove('active');
+    state.isTracksShuffled = false;
+
+    const tracksData = await api(`/api/tracks?album=${encodeURIComponent(albumName)}&artist=${encodeURIComponent(artistName)}`);
+    state.tracks = tracksData ? tracksData.tracks : [];
+    renderTracks();
+
+    const targetId = selectTrackId || (state.currentTrack && state.currentTrack.album === albumName ? state.currentTrack.id : null);
+    if (targetId) {
+      setTimeout(() => {
+        const rows = tracksList.querySelectorAll('tr');
+        state.tracks.forEach((t, i) => {
+          if (t.id === targetId && rows[i]) {
+            rows[i].classList.add('active-track');
+            rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
+      }, 60);
+    }
   }
 
   // Render Tracks Table
@@ -621,15 +669,22 @@
       // Click row to play
       tr.onclick = (e) => {
         if (e.target.closest('.btn-add-track-playlist')) return;
+        if (state.activeAlbumScope) {
+          state.playbackContext = { type: 'album', album: state.activeAlbumScope.album, artist: state.activeAlbumScope.artist };
+        } else {
+          state.playbackContext = { type: 'tracks' };
+        }
         setQueue(state.tracks, idx);
       };
 
       // Add to playlist
       const addBtn = tr.querySelector('.btn-add-track-playlist');
-      addBtn.onclick = (e) => {
-        e.stopPropagation();
-        openAddToPlaylistModal({ type: 'track', track });
-      };
+      if (addBtn) {
+        addBtn.onclick = (e) => {
+          e.stopPropagation();
+          openAddToPlaylistModal({ type: 'track', track });
+        };
+      }
 
       tracksList.appendChild(tr);
     });
@@ -681,9 +736,14 @@
   }
 
   document.querySelectorAll('.th-sortable').forEach(th => {
-    th.addEventListener('click', () => {
+    th.addEventListener('click', async () => {
       const sortField = th.dataset.sort;
       if (!sortField) return;
+
+      // Undo tracks page shuffle when sorting by a column
+      state.isTracksShuffled = false;
+      const shuffleBtn = document.getElementById('btn-tracks-page-shuffle');
+      if (shuffleBtn) shuffleBtn.classList.remove('active');
 
       if (state.sort.sortBy === sortField) {
         state.sort.sortOrder = state.sort.sortOrder === 'ASC' ? 'DESC' : 'ASC';
@@ -692,7 +752,14 @@
         state.sort.sortOrder = 'ASC';
       }
 
-      reloadActiveView();
+      await reloadActiveView();
+
+      // If playing from general tracks (not an album), update queue to match the new sort order!
+      if (state.playbackContext && state.playbackContext.type === 'tracks') {
+        state.queue = [...state.tracks];
+        state.queueIndex = state.queue.findIndex(t => t.id === state.currentTrack?.id);
+        updateQueueDrawer();
+      }
     });
   });
 
@@ -1061,7 +1128,7 @@
   }
 
   // View Switching
-  function switchView(viewName) {
+  function switchView(viewName, skipReload = false) {
     state.activeView = viewName;
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.view === viewName);
@@ -1072,7 +1139,9 @@
     if (viewName !== 'playlist') {
       state.activePlaylistId = null;
       renderPlaylists();
-      reloadActiveView();
+      if (!skipReload) {
+        reloadActiveView();
+      }
     }
   }
 
@@ -1160,18 +1229,23 @@
       btnRepeat.classList.add('active');
     } else if (state.repeatMode === 'all') {
       state.repeatMode = 'one';
-      btnRepeat.classList.add('active');
-      btnRepeat.style.color = '#00f2fe';
+      btnRepeat.classList.add('active', 'repeat-one');
     } else {
       state.repeatMode = 'none';
-      btnRepeat.classList.remove('active');
-      btnRepeat.style.color = '';
+      btnRepeat.classList.remove('active', 'repeat-one');
     }
   });
 
   // Navigation Links
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      if (btn.dataset.view === 'tracks') {
+        state.activeAlbumScope = null;
+        const titleEl = document.getElementById('tracks-view-title');
+        if (titleEl) titleEl.textContent = 'Tracks';
+      } else if (btn.dataset.view === 'albums') {
+        state.filters.artist = null;
+      }
       switchView(btn.dataset.view);
     });
   });
@@ -1229,6 +1303,87 @@
       `;
     }, 1500);
   });
+
+  // 1. If playing an album, clicking the thumbnail shows that album's tracks
+  const playerCoverBox = document.querySelector('.player-cover-box');
+  if (playerCoverBox) {
+    playerCoverBox.title = "View album tracks";
+    playerCoverBox.addEventListener('click', () => {
+      if (state.currentTrack && state.currentTrack.album) {
+        showAlbumTracks(state.currentTrack.album, state.currentTrack.artist, state.currentTrack.id);
+      }
+    });
+  }
+
+  // 2. If playing a song, clicking the song details shows the tracks window without filter and the current song selected
+  const playerDetails = document.querySelector('.player-details');
+  if (playerDetails) {
+    playerDetails.title = "Show in tracks library";
+    playerDetails.addEventListener('click', async () => {
+      if (!state.currentTrack) return;
+      // Clear filters
+      state.filters.decade = null;
+      state.filters.genre = null;
+      state.filters.search = '';
+      state.filters.artist = null;
+      state.filters.album = null;
+      state.activeAlbumScope = null;
+      searchInput.value = '';
+      searchClearBtn.style.display = 'none';
+      renderDecades();
+      renderGenres();
+      updateActiveFilterPills();
+
+      const titleEl = document.getElementById('tracks-view-title');
+      if (titleEl) titleEl.textContent = 'Tracks';
+
+      switchView('tracks');
+      await reloadActiveView();
+
+      setTimeout(() => {
+        const rows = tracksList.querySelectorAll('tr');
+        state.tracks.forEach((t, i) => {
+          if (t.id === state.currentTrack.id && rows[i]) {
+            rows[i].classList.add('active-track');
+            rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
+      }, 100);
+    });
+  }
+
+  // 3. Shuffle on the tracks page retaining any active filters (undone when clicking a column header)
+  const btnTracksPageShuffle = document.getElementById('btn-tracks-page-shuffle');
+  if (btnTracksPageShuffle) {
+    btnTracksPageShuffle.addEventListener('click', () => {
+      if (!state.tracks || state.tracks.length === 0) return;
+
+      // Fisher-Yates shuffle retaining filters
+      for (let i = state.tracks.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [state.tracks[i], state.tracks[j]] = [state.tracks[j], state.tracks[i]];
+      }
+
+      state.isTracksShuffled = true;
+      btnTracksPageShuffle.classList.add('active');
+
+      // Clear column sort indicators since order is now shuffled
+      document.querySelectorAll('.sort-indicator').forEach(el => {
+        el.textContent = '';
+      });
+
+      renderTracks();
+
+      // If playing from tracks window, update queue to match shuffled order
+      if (state.playbackContext && state.playbackContext.type === 'tracks') {
+        state.queue = [...state.tracks];
+        state.queueIndex = state.queue.findIndex(t => t.id === state.currentTrack?.id);
+        updateQueueDrawer();
+      }
+
+      showToast(`Shuffled ${state.tracks.length} tracks`);
+    });
+  }
 
   // Vault Authentication Handlers
   async function checkAuthAndBoot() {
