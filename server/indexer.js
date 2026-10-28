@@ -22,6 +22,10 @@ function cleanString(str, fallback = "") {
   return String(str).trim();
 }
 
+export function isDateBatchFolder(name) {
+  return /^\d{8}$/.test(name) || /^\d{4}[-_]\d{2}[-_]\d{2}$/.test(name);
+}
+
 /**
  * Evaluates candidate images found in an album folder to select the optimal front cover art.
  * Prioritizes standard front covers and high-resolution files while filtering out back covers,
@@ -263,11 +267,12 @@ export async function scanDirectory(targetDir, options = {}) {
           artist = parts[0];
         } else {
           const parentDir = path.basename(path.dirname(filePath));
-          artist = parentDir !== "." ? parentDir : "Unknown Artist";
+          artist = (!parentDir || parentDir === "." || isDateBatchFolder(parentDir)) ? "Unknown Artist" : parentDir;
         }
       }
       if (!album) {
-        album = path.basename(dir) || "Unknown Album";
+        const albumDirName = path.basename(dir);
+        album = (!albumDirName || isDateBatchFolder(albumDirName)) ? (parts.length > 1 ? parts[1] : "Unknown Album") : albumDirName;
       }
 
       // Year & Decade detection
@@ -342,7 +347,7 @@ export async function scanDirectory(targetDir, options = {}) {
 
 // Standalone execution support
 if (process.argv[1] && process.argv[1].endsWith("indexer.js")) {
-  const target = process.env.MUSIC_DIR || path.resolve("./sample_music");
+  const target = process.env.MUSIC_DIR || process.env.LOCAL_MOUNT_DIR || path.resolve("./sample_music");
   scanDirectory(target).then(() => {
     process.exit(0);
   });
