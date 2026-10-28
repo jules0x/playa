@@ -1,0 +1,4 @@
+node_modules/
+data/playa.db-wal
+data/playa.db-shm
+.DS_Store
