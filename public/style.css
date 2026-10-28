@@ -1549,3 +1549,134 @@ body {
   transform: translateX(-50%) translateY(0);
 }
 
+/* --- Vault Lock Screen Modal --- */
+.lock-screen-backdrop {
+  z-index: 9999;
+  background: rgba(8, 10, 16, 0.94);
+  backdrop-filter: blur(28px);
+}
+.lock-card {
+  width: 100%;
+  max-width: 380px;
+  background: rgba(18, 22, 33, 0.95);
+  border: 1px solid rgba(0, 242, 254, 0.35);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 242, 254, 0.15);
+  border-radius: var(--radius-md);
+  padding: 32px 28px;
+  text-align: center;
+  animation: lockCardPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes lockCardPop {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.lock-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: rgba(0, 242, 254, 0.1);
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-cyan);
+  box-shadow: 0 0 20px rgba(0, 242, 254, 0.2);
+}
+.lock-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.lock-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin-bottom: 22px;
+}
+.lock-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lock-input-wrap {
+  position: relative;
+  width: 100%;
+}
+.lock-input-wrap input {
+  width: 100%;
+  background: rgba(10, 13, 20, 0.9);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px 42px 12px 14px;
+  font-size: 0.95rem;
+  color: #fff;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+.lock-input-wrap input:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 12px rgba(0, 242, 254, 0.25);
+}
+.btn-toggle-eye {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-toggle-eye:hover {
+  color: var(--accent-cyan);
+}
+.lock-error-msg {
+  color: #ff5252;
+  font-size: 0.8rem;
+  background: rgba(255, 82, 82, 0.1);
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+.btn-unlock-vault {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: linear-gradient(135deg, var(--accent-cyan), #4facfe);
+  color: #0b0f19;
+  font-weight: 600;
+  font-size: 0.92rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(0, 242, 254, 0.35);
+}
+.btn-unlock-vault:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 242, 254, 0.45);
+}
+.btn-unlock-vault:active {
+  transform: translateY(0);
+}
+.shake {
+  animation: shakeAnim 0.35s ease-in-out;
+}
+@keyframes shakeAnim {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+

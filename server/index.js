@@ -5,9 +5,34 @@ import fastifyCors from "@fastify/cors";
 import path from "path";
 import fs from "fs";
 import mime from "mime-types";
+import crypto from "crypto";
 import { db, initDatabase } from "./db.js";
 import { scanDirectory } from "./indexer.js";
 import { isSpacesConfigured, getPresignedStreamUrl } from "./s3.js";
+
+const PLAYA_PASSWORD = process.env.PLAYA_PASSWORD || process.env.AUTH_PASSWORD;
+
+function getAuthToken() {
+  if (!PLAYA_PASSWORD) return null;
+  return crypto.createHmac("sha256", PLAYA_PASSWORD).update("playa-vault-session-key").digest("hex");
+}
+
+function parseCookies(header) {
+  const cookies = {};
+  if (!header) return cookies;
+  header.split(";").forEach((pair) => {
+    const [name, ...rest] = pair.trim().split("=");
+    if (name) cookies[name] = decodeURIComponent(rest.join("="));
+  });
+  return cookies;
+}
+
+function isAuthenticated(req) {
+  if (!PLAYA_PASSWORD) return true;
+  const cookies = parseCookies(req.headers.cookie);
+  const token = cookies.playa_session || req.headers["x-playa-token"];
+  return token === getAuthToken();
+}
 
 const fastify = Fastify({ logger: false });
 
@@ -23,6 +48,26 @@ if (!fs.existsSync(COVERS_DIR)) fs.mkdirSync(COVERS_DIR, { recursive: true });
 if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
 
 initDatabase();
+
+// Auth Protection Hook for API routes
+fastify.addHook("onRequest", async (req, reply) => {
+  if (!PLAYA_PASSWORD) return; // Auth disabled if no password set
+
+  const urlPath = req.url.split("?")[0];
+
+  // Whitelist auth routes and static frontend assets
+  if (urlPath.startsWith("/api/auth/")) return;
+
+  // Protect all /api/ data and streaming routes
+  if (urlPath.startsWith("/api/")) {
+    if (!isAuthenticated(req)) {
+      return reply.status(401).send({
+        error: "Unauthorized",
+        message: "Playa vault is locked. Password required."
+      });
+    }
+  }
+});
 
 await fastify.register(fastifyCors, { origin: true });
 
@@ -54,6 +99,40 @@ const DEFAULT_COVER_SVG = `
   <path d="M196 160 L196 230 A20 20 0 0 0 178 248 A20 20 0 1 0 196 228 L196 175 L225 168 L225 210 A20 20 0 0 0 207 228 A20 20 0 1 0 225 208 L225 152 Z" fill="#c6a0f6"/>
 </svg>
 `.trim();
+
+// 0. Authentication Endpoints
+fastify.get("/api/auth/status", async (req) => {
+  return {
+    authRequired: Boolean(PLAYA_PASSWORD),
+    authenticated: isAuthenticated(req)
+  };
+});
+
+fastify.post("/api/auth/login", async (req, reply) => {
+  if (!PLAYA_PASSWORD) {
+    return { success: true, message: "No password configured" };
+  }
+
+  const { password } = req.body || {};
+  if (!password || password !== PLAYA_PASSWORD) {
+    return reply.status(401).send({ error: "Invalid password" });
+  }
+
+  const token = getAuthToken();
+  const isSecure = req.protocol === "https" || req.headers["x-forwarded-proto"] === "https";
+
+  reply.header(
+    "Set-Cookie",
+    `playa_session=${token}; Path=/; Max-Age=5184000; HttpOnly; SameSite=Lax${isSecure ? "; Secure" : ""}`
+  );
+
+  return { success: true, token };
+});
+
+fastify.post("/api/auth/logout", async (req, reply) => {
+  reply.header("Set-Cookie", "playa_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax");
+  return { success: true };
+});
 
 // 1. Audio Streaming Endpoint with Full HTTP Range Support & S3 Pre-signed Streaming
 fastify.get("/api/stream/:id", async (req, reply) => {

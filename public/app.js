@@ -100,6 +100,14 @@
   const btnCreatePlaylistSubmit = document.getElementById('btn-create-playlist-submit');
   const toastNotify = document.getElementById('toast-notify');
 
+  // Vault Lock Elements
+  const vaultLockModal = document.getElementById('vault-lock-modal');
+  const vaultLoginForm = document.getElementById('vault-login-form');
+  const vaultPasswordInput = document.getElementById('vault-password-input');
+  const toggleVaultPwBtn = document.getElementById('toggle-vault-pw');
+  const lockErrorMsg = document.getElementById('lock-error-msg');
+  const btnVaultLock = document.getElementById('btn-vault-lock');
+
   // Toast Helper
   let toastTimer = null;
   function showToast(message) {
@@ -194,6 +202,10 @@
   async function api(endpoint, options = {}) {
     try {
       const res = await fetch(endpoint, options);
+      if (res.status === 401) {
+        showLockScreen();
+        return null;
+      }
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error || `HTTP ${res.status}`);
@@ -1218,6 +1230,104 @@
     }, 1500);
   });
 
+  // Vault Authentication Handlers
+  async function checkAuthAndBoot() {
+    try {
+      const status = await fetch('/api/auth/status').then(r => r.json()).catch(() => ({ authRequired: false, authenticated: true }));
+      if (status.authRequired) {
+        if (!status.authenticated) {
+          showLockScreen();
+          return;
+        } else {
+          if (btnVaultLock) btnVaultLock.style.display = 'flex';
+        }
+      }
+      hideLockScreen();
+      await loadLibrary();
+    } catch (err) {
+      console.error('Auth check error:', err);
+      await loadLibrary();
+    }
+  }
+
+  function showLockScreen() {
+    if (!vaultLockModal) return;
+    vaultLockModal.style.display = 'flex';
+    if (lockErrorMsg) lockErrorMsg.style.display = 'none';
+    if (vaultPasswordInput) {
+      vaultPasswordInput.value = '';
+      setTimeout(() => vaultPasswordInput.focus(), 100);
+    }
+  }
+
+  function hideLockScreen() {
+    if (vaultLockModal) vaultLockModal.style.display = 'none';
+  }
+
+  async function handleVaultLogin() {
+    const password = vaultPasswordInput ? vaultPasswordInput.value.trim() : '';
+    if (!password) return;
+
+    if (lockErrorMsg) lockErrorMsg.style.display = 'none';
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (lockErrorMsg) {
+          lockErrorMsg.textContent = data.error || 'Invalid password';
+          lockErrorMsg.style.display = 'block';
+        }
+        const card = vaultLockModal ? vaultLockModal.querySelector('.lock-card') : null;
+        if (card) {
+          card.classList.remove('shake');
+          void card.offsetWidth;
+          card.classList.add('shake');
+        }
+        return;
+      }
+
+      hideLockScreen();
+      if (btnVaultLock) btnVaultLock.style.display = 'flex';
+      showToast('🔓 Vault Unlocked');
+      await loadLibrary();
+    } catch (err) {
+      if (lockErrorMsg) {
+        lockErrorMsg.textContent = 'Connection error. Please try again.';
+        lockErrorMsg.style.display = 'block';
+      }
+    }
+  }
+
+  async function handleVaultLogout() {
+    await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+    if (btnVaultLock) btnVaultLock.style.display = 'none';
+    showToast('🔒 Vault Locked');
+    showLockScreen();
+  }
+
+  if (vaultLoginForm) {
+    vaultLoginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleVaultLogin();
+    });
+  }
+
+  if (toggleVaultPwBtn && vaultPasswordInput) {
+    toggleVaultPwBtn.addEventListener('click', () => {
+      vaultPasswordInput.type = vaultPasswordInput.type === 'password' ? 'text' : 'password';
+    });
+  }
+
+  if (btnVaultLock) {
+    btnVaultLock.addEventListener('click', handleVaultLogout);
+  }
+
   // Global Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT') return;
@@ -1231,6 +1341,6 @@
     }
   });
 
-  // Boot Application
-  loadLibrary();
+  // Boot Application with Vault Authentication
+  checkAuthAndBoot();
 })();
