@@ -8,7 +8,7 @@ import mime from "mime-types";
 import crypto from "crypto";
 import { db, initDatabase } from "./db.js";
 import { scanDirectory } from "./indexer.js";
-import { isSpacesConfigured, getPresignedStreamUrl } from "./s3.js";
+import { isSpacesConfigured, getPresignedStreamUrl, getSpacesObjectStream } from "./s3.js";
 
 const PLAYA_PASSWORD = process.env.PLAYA_PASSWORD || process.env.AUTH_PASSWORD;
 
@@ -55,10 +55,16 @@ fastify.addHook("onRequest", async (req, reply) => {
 
   const urlPath = req.url.split("?")[0];
 
-  // Whitelist auth routes and static frontend assets
-  if (urlPath.startsWith("/api/auth/")) return;
+  // Whitelist auth routes, default placeholder cover, and favicon
+  if (
+    urlPath.startsWith("/api/auth/") ||
+    urlPath === "/api/cover/default" ||
+    urlPath === "/favicon.ico"
+  ) {
+    return;
+  }
 
-  // Protect all /api/ data and streaming routes
+  // Protect all other /api/ data and streaming routes
   if (urlPath.startsWith("/api/")) {
     if (!isAuthenticated(req)) {
       return reply.status(401).send({
@@ -67,6 +73,11 @@ fastify.addHook("onRequest", async (req, reply) => {
       });
     }
   }
+});
+
+// Fast favicon responder
+fastify.get("/favicon.ico", async (req, reply) => {
+  return reply.status(204).send();
 });
 
 await fastify.register(fastifyCors, { origin: true });
@@ -134,7 +145,7 @@ fastify.post("/api/auth/logout", async (req, reply) => {
   return { success: true };
 });
 
-// 1. Audio Streaming Endpoint with Full HTTP Range Support & S3 Pre-signed Streaming
+// 1. Audio Streaming Endpoint with Full HTTP Range Support & S3 Direct/Proxy Streaming
 fastify.get("/api/stream/:id", async (req, reply) => {
   const { id } = req.params;
   const track = db.prepare("SELECT file_path FROM tracks WHERE id = ?").get(id);
@@ -143,40 +154,69 @@ fastify.get("/api/stream/:id", async (req, reply) => {
     return reply.status(404).send({ error: "Track not found" });
   }
 
-  // If track is stored in DigitalOcean Spaces / S3
+  // Resolve candidate Spaces object key if file is in cloud or missing on local disk
+  let spacesKey = null;
   if (track.file_path.startsWith("s3://") || track.file_path.startsWith("spaces://")) {
-    const objectKey = track.file_path.replace(/^(s3|spaces):\/\/[^/]+\//, "").replace(/^(s3|spaces):\/\//, "");
-    if (isSpacesConfigured()) {
-      const presignedUrl = await getPresignedStreamUrl(objectKey);
-      if (presignedUrl) {
-        return reply.redirect(presignedUrl);
-      }
+    spacesKey = track.file_path.replace(/^(s3|spaces):\/\/[^/]+\//, "").replace(/^(s3|spaces):\/\//, "");
+  } else {
+    // Check if path is inside a mounted Spaces directory (e.g., /home/bobohilife/spaces_mount/20261028/...)
+    const mountMatch = track.file_path.match(/(?:spaces_mount|mount|spaces|vault)\/(.+)$/i);
+    if (mountMatch) {
+      spacesKey = mountMatch[1];
     } else {
-      return reply.status(503).send({
-        error: "Spaces not configured",
-        message: "DigitalOcean Spaces environment variables are not set on Render. Please configure SPACES_KEY, SPACES_SECRET, SPACES_BUCKET, and SPACES_ENDPOINT."
-      });
+      const musicMatch = track.file_path.match(/(?:sample_music|music|audio)\/(.+)$/i);
+      spacesKey = musicMatch ? musicMatch[1] : path.basename(track.file_path);
     }
   }
 
-  // If local file is missing but Spaces is configured, try streaming from Spaces object key
-  if (isSpacesConfigured() && !fs.existsSync(track.file_path)) {
-    const match = track.file_path.match(/(?:sample_music|music|audio)\/(.+)$/i);
-    const candidateKey = match ? match[1] : path.basename(track.file_path);
+  // If Spaces is configured, stream from Spaces
+  if (isSpacesConfigured() && spacesKey) {
+    // If USE_PRESIGNED_URLS is explicitly set to true, redirect
+    if (process.env.USE_PRESIGNED_URLS === "true") {
+      try {
+        const presignedUrl = await getPresignedStreamUrl(spacesKey);
+        if (presignedUrl) return reply.redirect(presignedUrl);
+      } catch (e) {}
+    }
+
+    // Stream directly through Fastify with HTTP range to avoid browser CORS issues
     try {
-      const presignedUrl = await getPresignedStreamUrl(candidateKey);
-      if (presignedUrl) {
-        return reply.redirect(presignedUrl);
+      const range = req.headers.range;
+      const s3Response = await getSpacesObjectStream(spacesKey, range);
+
+      const contentType = s3Response.ContentType || mime.lookup(spacesKey) || "audio/mpeg";
+      const contentLength = s3Response.ContentLength;
+      const contentRange = s3Response.ContentRange;
+      const statusCode = contentRange ? 206 : 200;
+
+      let res = reply
+        .status(statusCode)
+        .header("Access-Control-Allow-Origin", "*")
+        .header("Access-Control-Allow-Headers", "Range, Content-Range, Content-Type, Accept-Ranges")
+        .header("Access-Control-Expose-Headers", "Content-Range, Content-Length, Accept-Ranges, Content-Type")
+        .header("Accept-Ranges", "bytes")
+        .header("Content-Type", contentType);
+
+      if (contentRange) res = res.header("Content-Range", contentRange);
+      if (contentLength) res = res.header("Content-Length", contentLength);
+
+      return res.send(s3Response.Body);
+    } catch (err) {
+      console.warn(`[Spaces Streaming] Key "${spacesKey}" error:`, err.message);
+      if (!fs.existsSync(track.file_path)) {
+        return reply.status(404).send({
+          error: "Track file not found",
+          message: `Object "${spacesKey}" was not found in Spaces bucket.`,
+          details: err.message
+        });
       }
-    } catch (e) {
-      // proceed to 404
     }
   }
 
   if (!fs.existsSync(track.file_path)) {
     return reply.status(404).send({
       error: "Track file not found on disk",
-      message: "Audio files are not stored on Render's ephemeral disk. Please add your DigitalOcean Spaces environment variables to stream from your Spaces bucket."
+      message: "Audio files are not stored on Render's ephemeral disk. Please check your Spaces bucket and environment variables."
     });
   }
 
@@ -212,11 +252,9 @@ fastify.get("/api/stream/:id", async (req, reply) => {
   } else {
     return reply
       .header("Access-Control-Allow-Origin", "*")
-      .header("Access-Control-Allow-Headers", "Range, Content-Range, Content-Type, Accept-Ranges")
-      .header("Access-Control-Expose-Headers", "Content-Range, Content-Length, Accept-Ranges, Content-Type")
       .header("Content-Length", fileSize)
-      .header("Accept-Ranges", "bytes")
       .header("Content-Type", contentType)
+      .header("Accept-Ranges", "bytes")
       .send(fs.createReadStream(filePath));
   }
 });
