@@ -339,6 +339,33 @@
     });
   }
 
+  // Render Playlists in Sidebar
+  function renderPlaylists() {
+    if (!playlistsContainer) return;
+    playlistsContainer.innerHTML = "";
+    if (!state.playlists || state.playlists.length === 0) {
+      playlistsContainer.innerHTML = '<div style="font-size:0.75rem; color:var(--text-muted, #71717a); padding:6px 10px;">No playlists yet</div>';
+      return;
+    }
+    state.playlists.forEach((pl) => {
+      const item = document.createElement("div");
+      item.className = "nav-item" + (state.activeView === "playlist" && state.activePlaylistId === pl.id ? " active" : "");
+      item.style.cursor = "pointer";
+      item.style.display = "flex";
+      item.style.alignItems = "center";
+      item.style.justifyContent = "space-between";
+      item.style.padding = "6px 12px";
+      item.style.fontSize = "0.85rem";
+      item.style.borderRadius = "6px";
+      item.innerHTML = `
+        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${pl.name}">🎧 ${pl.name}</span>
+        <span style="font-size:0.7rem; opacity:0.6; margin-left:6px;">${pl.track_count || 0}</span>
+      `;
+      item.onclick = () => openPlaylistView(pl.id);
+      playlistsContainer.appendChild(item);
+    });
+  }
+
   // Clear All Filters Helper
   function clearAllFilters() {
     state.filters.decade = null;

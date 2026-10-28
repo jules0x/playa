@@ -1,11 +1,11 @@
 import { S3Client, GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const KEY = process.env.DO_SPACES_KEY;
-const SECRET = process.env.DO_SPACES_SECRET;
-const ENDPOINT = process.env.DO_SPACES_ENDPOINT; // e.g. "https://nyc3.digitaloceanspaces.com"
-const BUCKET = process.env.DO_SPACES_BUCKET;
-const REGION = process.env.DO_SPACES_REGION || "us-east-1";
+const KEY = process.env.SPACES_KEY || process.env.DO_SPACES_KEY;
+const SECRET = process.env.SPACES_SECRET || process.env.DO_SPACES_SECRET;
+const ENDPOINT = process.env.SPACES_ENDPOINT || process.env.DO_SPACES_ENDPOINT;
+const BUCKET = process.env.SPACES_BUCKET || process.env.DO_SPACES_BUCKET;
+const REGION = process.env.SPACES_REGION || process.env.DO_SPACES_REGION || "us-east-1";
 
 let s3Client = null;
 

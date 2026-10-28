@@ -1,3 +1,4 @@
+import "dotenv/config";
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import fastifyCors from "@fastify/cors";
@@ -17,7 +18,7 @@ const DATA_DIR = process.env.DATA_DIR || path.resolve("./data");
 const COVERS_DIR = path.join(DATA_DIR, "covers");
 const PUBLIC_DIR = path.resolve("./public");
 
-// Ensure dirs
+// Ensure data dirs exist
 if (!fs.existsSync(COVERS_DIR)) fs.mkdirSync(COVERS_DIR, { recursive: true });
 if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
 
@@ -97,17 +98,21 @@ fastify.get("/api/stream/:id", async (req, reply) => {
     const chunksize = end - start + 1;
     const stream = fs.createReadStream(filePath, { start, end });
 
-    reply
+    return reply
       .status(206)
       .header("Access-Control-Allow-Origin", "*")
+      .header("Access-Control-Allow-Headers", "Range, Content-Range, Content-Type, Accept-Ranges")
+      .header("Access-Control-Expose-Headers", "Content-Range, Content-Length, Accept-Ranges, Content-Type")
       .header("Content-Range", `bytes ${start}-${end}/${fileSize}`)
       .header("Accept-Ranges", "bytes")
       .header("Content-Length", chunksize)
       .header("Content-Type", contentType)
       .send(stream);
   } else {
-    reply
+    return reply
       .header("Access-Control-Allow-Origin", "*")
+      .header("Access-Control-Allow-Headers", "Range, Content-Range, Content-Type, Accept-Ranges")
+      .header("Access-Control-Expose-Headers", "Content-Range, Content-Length, Accept-Ranges, Content-Type")
       .header("Content-Length", fileSize)
       .header("Accept-Ranges", "bytes")
       .header("Content-Type", contentType)
@@ -115,7 +120,7 @@ fastify.get("/api/stream/:id", async (req, reply) => {
   }
 });
 
-// 2. Cover Art Endpoint
+// 2. Cover Art Endpoint with Permanent Browser Caching (Zero Remote Queries)
 fastify.get("/api/cover/:hash", async (req, reply) => {
   const { hash } = req.params;
   if (!hash || hash === "null" || hash === "default") {
@@ -124,7 +129,10 @@ fastify.get("/api/cover/:hash", async (req, reply) => {
 
   const coverPath = path.join(COVERS_DIR, `${hash}.jpg`);
   if (fs.existsSync(coverPath)) {
-    return reply.type("image/jpeg").send(fs.createReadStream(coverPath));
+    return reply
+      .header("Cache-Control", "public, max-age=31536000, immutable")
+      .type("image/jpeg")
+      .send(fs.createReadStream(coverPath));
   }
 
   return reply.type("image/svg+xml").send(DEFAULT_COVER_SVG);
@@ -153,7 +161,6 @@ fastify.get("/api/tracks", async (req) => {
     params.album = album;
   }
 
-  // Whitelist sort fields to prevent SQL injection
   const allowedSortFields = {
     track_no: "tracks.track_no",
     title: "tracks.title COLLATE NOCASE",
@@ -182,7 +189,7 @@ fastify.get("/api/tracks", async (req) => {
     params.search = sanitizedSearch;
   } else {
     sql = `
-      SELECT * FROM tracks
+      SELECT tracks.* FROM tracks
       ${conditions.length ? "WHERE " + conditions.join(" AND ") : ""}
       ORDER BY ${orderClause}
     `;
@@ -402,11 +409,47 @@ fastify.get("/api/stats", async (req) => {
   return db.prepare(sql).get(params);
 });
 
-// 9. Trigger Ingestion Rescan
+// Scan State Tracker
+let scanState = {
+  isScanning: false,
+  directory: null,
+  startTime: null,
+  lastResult: null
+};
+
+// 9. Scan Status API
+fastify.get("/api/scan/status", async () => {
+  return scanState;
+});
+
+// 10. Trigger Ingestion Rescan API
 fastify.post("/api/scan", async (req, reply) => {
+  if (scanState.isScanning) {
+    return reply.status(409).send({
+      error: "Scan already in progress",
+      status: "scanning",
+      directory: scanState.directory
+    });
+  }
+
   const target = req.body?.dir || MUSIC_DIR;
-  // Trigger scan asynchronously
-  scanDirectory(target).catch(console.error);
+  const force = Boolean(req.body?.force);
+
+  scanState.isScanning = true;
+  scanState.directory = target;
+  scanState.startTime = new Date().toISOString();
+
+  // Run asynchronously without blocking HTTP response
+  scanDirectory(target, { force })
+    .then((result) => {
+      scanState.isScanning = false;
+      scanState.lastResult = { ...result, completedAt: new Date().toISOString() };
+    })
+    .catch((err) => {
+      scanState.isScanning = false;
+      scanState.lastResult = { error: err.message, failedAt: new Date().toISOString() };
+    });
+
   return { status: "scanning_started", directory: target };
 });
 
@@ -414,6 +457,7 @@ const start = async () => {
   try {
     await fastify.listen({ port: PORT, host: HOST });
     console.log(`\n🎵 Playa Audio Server active at: http://localhost:${PORT}`);
+    console.log(`📂 Music Vault Target: ${MUSIC_DIR}`);
   } catch (err) {
     console.error("Server start failure:", err);
     process.exit(1);
