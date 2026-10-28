@@ -16,8 +16,26 @@ export function isSpacesConfigured() {
 export function getS3Client() {
   if (!isSpacesConfigured()) return null;
   if (!s3Client) {
+    let cleanEndpoint = ENDPOINT.startsWith("http") ? ENDPOINT : `https://${ENDPOINT}`;
+    cleanEndpoint = cleanEndpoint.replace(/\/+$/, "");
+
+    // If user provided bucket in endpoint (e.g. https://playa.syd1.digitaloceanspaces.com),
+    // strip the bucket prefix so AWS S3 SDK doesn't double it with forcePathStyle: false
+    if (BUCKET) {
+      try {
+        const u = new URL(cleanEndpoint);
+        const prefix = `${BUCKET.toLowerCase()}.`;
+        if (u.hostname.toLowerCase().startsWith(prefix)) {
+          u.hostname = u.hostname.slice(prefix.length);
+          cleanEndpoint = u.origin;
+        }
+      } catch (e) {
+        // ignore url parsing error and fallback to cleanEndpoint
+      }
+    }
+
     s3Client = new S3Client({
-      endpoint: ENDPOINT.startsWith("http") ? ENDPOINT : `https://${ENDPOINT}`,
+      endpoint: cleanEndpoint,
       region: REGION,
       credentials: {
         accessKeyId: KEY,
