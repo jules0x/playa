@@ -275,86 +275,114 @@ fastify.delete("/api/playlists/:id/tracks/:trackId", async (req, reply) => {
   return { success: true };
 });
 
-// 4. Decades Aggregation
-fastify.get("/api/decades", async () => {
-  const rows = db.prepare(`
-    SELECT decade, COUNT(*) as track_count, COUNT(DISTINCT album) as album_count
-    FROM tracks
-    WHERE decade IS NOT NULL AND decade != 'Unknown'
-    GROUP BY decade
-    ORDER BY decade ASC
-  `).all();
-  return rows;
-});
-
-// 5. Genres Aggregation
-fastify.get("/api/genres", async () => {
-  const rows = db.prepare(`
-    SELECT genre, COUNT(*) as track_count
-    FROM tracks
-    WHERE genre IS NOT NULL
-    GROUP BY genre
-    ORDER BY track_count DESC, genre ASC
-  `).all();
-  return rows;
-});
-
-// 6. Artists Aggregation
-fastify.get("/api/artists", async () => {
-  const rows = db.prepare(`
-    SELECT artist, COUNT(*) as track_count, COUNT(DISTINCT album) as album_count,
-           MAX(cover_hash) as cover_hash
-    FROM tracks
-    GROUP BY artist
-    ORDER BY artist COLLATE NOCASE ASC
-  `).all();
-  return rows;
-});
-
-// 7. Albums Aggregation
-fastify.get("/api/albums", async (req) => {
-  const { decade, genre, artist } = req.query;
+// Helper to build SQL WHERE conditions for aggregations
+function buildFilterConditions(query, excludeKey = null) {
   const conditions = [];
   const params = {};
 
-  if (decade) {
-    conditions.push("decade = @decade");
-    params.decade = decade;
+  if (query.genre && excludeKey !== "genre") {
+    conditions.push("tracks.genre LIKE @genre");
+    params.genre = `%${query.genre}%`;
   }
-  if (genre) {
-    conditions.push("genre LIKE @genre");
-    params.genre = `%${genre}%`;
+  if (query.decade && excludeKey !== "decade") {
+    conditions.push("tracks.decade = @decade");
+    params.decade = query.decade;
   }
-  if (artist) {
-    conditions.push("artist = @artist");
-    params.artist = artist;
+  if (query.artist && excludeKey !== "artist") {
+    conditions.push("tracks.artist = @artist");
+    params.artist = query.artist;
+  }
+  if (query.album && excludeKey !== "album") {
+    conditions.push("tracks.album = @album");
+    params.album = query.album;
   }
 
+  let joinFts = "";
+  if (query.search && query.search.trim()) {
+    joinFts = "JOIN tracks_fts ON tracks.id = tracks_fts.rowid";
+    conditions.push("tracks_fts MATCH @search");
+    params.search = query.search.trim().replace(/['"*]/g, "") + "*";
+  }
+
+  const whereClause = conditions.length ? "WHERE " + conditions.join(" AND ") : "";
+  return { joinFts, whereClause, params };
+}
+
+// 4. Decades Aggregation with Faceted Counts
+fastify.get("/api/decades", async (req) => {
+  const { joinFts, whereClause, params } = buildFilterConditions(req.query, "decade");
   const sql = `
-    SELECT album, artist, year, decade, genre, cover_hash,
-           COUNT(*) as track_count, SUM(duration) as total_duration
+    SELECT tracks.decade, COUNT(*) as track_count, COUNT(DISTINCT tracks.album) as album_count
     FROM tracks
-    ${conditions.length ? "WHERE " + conditions.join(" AND ") : ""}
-    GROUP BY album, artist
-    ORDER BY year DESC, album COLLATE NOCASE ASC
+    ${joinFts}
+    ${whereClause}
+    ${whereClause ? "AND" : "WHERE"} tracks.decade IS NOT NULL AND tracks.decade != 'Unknown'
+    GROUP BY tracks.decade
+    ORDER BY tracks.decade ASC
   `;
-
-  const rows = db.prepare(sql).all(params);
-  return rows;
+  return db.prepare(sql).all(params);
 });
 
-// 8. Global Stats
-fastify.get("/api/stats", async () => {
-  const stat = db.prepare(`
+// 5. Genres Aggregation with Faceted Counts
+fastify.get("/api/genres", async (req) => {
+  const { joinFts, whereClause, params } = buildFilterConditions(req.query, "genre");
+  const sql = `
+    SELECT tracks.genre, COUNT(*) as track_count
+    FROM tracks
+    ${joinFts}
+    ${whereClause}
+    ${whereClause ? "AND" : "WHERE"} tracks.genre IS NOT NULL
+    GROUP BY tracks.genre
+    ORDER BY track_count DESC, tracks.genre ASC
+  `;
+  return db.prepare(sql).all(params);
+});
+
+// 6. Artists Aggregation with Faceted Counts
+fastify.get("/api/artists", async (req) => {
+  const { joinFts, whereClause, params } = buildFilterConditions(req.query, "artist");
+  const sql = `
+    SELECT tracks.artist, COUNT(*) as track_count, COUNT(DISTINCT tracks.album) as album_count,
+           MAX(tracks.cover_hash) as cover_hash
+    FROM tracks
+    ${joinFts}
+    ${whereClause}
+    GROUP BY tracks.artist
+    ORDER BY tracks.artist COLLATE NOCASE ASC
+  `;
+  return db.prepare(sql).all(params);
+});
+
+// 7. Albums Aggregation with Faceted Counts
+fastify.get("/api/albums", async (req) => {
+  const { joinFts, whereClause, params } = buildFilterConditions(req.query, "album");
+  const sql = `
+    SELECT tracks.album, tracks.artist, tracks.year, tracks.decade, tracks.genre, tracks.cover_hash,
+           COUNT(*) as track_count, SUM(tracks.duration) as total_duration
+    FROM tracks
+    ${joinFts}
+    ${whereClause}
+    GROUP BY tracks.album, tracks.artist
+    ORDER BY tracks.year DESC, tracks.album COLLATE NOCASE ASC
+  `;
+  return db.prepare(sql).all(params);
+});
+
+// 8. Global Stats with Active Faceted Counts
+fastify.get("/api/stats", async (req) => {
+  const { joinFts, whereClause, params } = buildFilterConditions(req.query);
+  const sql = `
     SELECT 
       COUNT(*) as total_tracks,
-      COUNT(DISTINCT album) as total_albums,
-      COUNT(DISTINCT artist) as total_artists,
-      COUNT(DISTINCT genre) as total_genres,
-      SUM(duration) as total_duration
+      COUNT(DISTINCT tracks.album) as total_albums,
+      COUNT(DISTINCT tracks.artist) as total_artists,
+      COUNT(DISTINCT tracks.genre) as total_genres,
+      COALESCE(SUM(tracks.duration), 0) as total_duration
     FROM tracks
-  `).get();
-  return stat;
+    ${joinFts}
+    ${whereClause}
+  `;
+  return db.prepare(sql).get(params);
 });
 
 // 9. Trigger Ingestion Rescan

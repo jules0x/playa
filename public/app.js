@@ -240,18 +240,61 @@
     await reloadActiveView();
   }
 
-  // Render Decades in Sidebar
+  // Dynamic Faceted Counts Update
+  async function updateFacetedCounts(params) {
+    const [stats, dynamicDecades, dynamicGenres] = await Promise.all([
+      api(`/api/stats?${params.toString()}`),
+      api(`/api/decades?${params.toString()}`),
+      api(`/api/genres?${params.toString()}`)
+    ]);
+
+    // 1. Update Views navigation button counters
+    if (stats) {
+      state.stats = stats;
+      countAlbumsEl.textContent = stats.total_albums || 0;
+      countTracksEl.textContent = stats.total_tracks || 0;
+      countArtistsEl.textContent = stats.total_artists || 0;
+    }
+
+    // 2. Update Decade chips with live counts
+    if (dynamicDecades) {
+      const countsMap = {};
+      dynamicDecades.forEach(d => { countsMap[d.decade] = d.track_count; });
+      decadesContainer.querySelectorAll('.decade-chip').forEach(chip => {
+        const decName = chip.dataset.decade;
+        const count = countsMap[decName] || 0;
+        const subcountEl = chip.querySelector('.subcount');
+        if (subcountEl) subcountEl.textContent = count;
+        chip.classList.toggle('zero-count', count === 0);
+      });
+    }
+
+    // 3. Update Genre badges with live counts
+    if (dynamicGenres) {
+      const genreCountsMap = {};
+      dynamicGenres.forEach(g => { genreCountsMap[g.genre] = g.track_count; });
+      genresContainer.querySelectorAll('.genre-badge').forEach(badge => {
+        const gName = badge.dataset.genre;
+        const count = genreCountsMap[gName] || 0;
+        const subcountEl = badge.querySelector('.subcount-genre');
+        if (subcountEl) subcountEl.textContent = `(${count})`;
+        badge.classList.toggle('zero-count', count === 0);
+      });
+    }
+  }
+
+  // Render Decades in Sidebar (with data attributes)
   function renderDecades() {
     decadesContainer.innerHTML = '';
     state.decades.forEach(d => {
       const chip = document.createElement('div');
       chip.className = `decade-chip ${state.filters.decade === d.decade ? 'active' : ''}`;
+      chip.dataset.decade = d.decade;
       chip.innerHTML = `
-        <span>${d.decade}</span>
+        <span>${state.filters.decade === d.decade ? '● ' : ''}${d.decade}</span>
         <span class="subcount">${d.track_count}</span>
       `;
       chip.onclick = () => {
-        // EXCLUSIVE: Selecting decade clears artist & album
         if (state.filters.decade === d.decade) {
           state.filters.decade = null;
         } else {
@@ -268,15 +311,18 @@
     });
   }
 
-  // Render Genres in Sidebar
+  // Render Genres in Sidebar (with data attributes)
   function renderGenres() {
     genresContainer.innerHTML = '';
     state.genres.forEach(g => {
       const badge = document.createElement('div');
       badge.className = `genre-badge ${state.filters.genre === g.genre ? 'active' : ''}`;
-      badge.textContent = `${g.genre} (${g.track_count})`;
+      badge.dataset.genre = g.genre;
+      badge.innerHTML = `
+        <span>${state.filters.genre === g.genre ? '✓ ' : ''}${g.genre}</span>
+        <span class="subcount-genre" style="opacity:0.7; font-size:0.7rem;">(${g.track_count})</span>
+      `;
       badge.onclick = () => {
-        // Selecting genre clears artist & album
         if (state.filters.genre === g.genre) {
           state.filters.genre = null;
         } else {
@@ -293,48 +339,51 @@
     });
   }
 
-  // Render Playlists in Sidebar
-  function renderPlaylists() {
-    playlistsContainer.innerHTML = '';
-    if (state.playlists.length === 0) {
-      playlistsContainer.innerHTML = `<div style="font-size:0.75rem; color:var(--text-dim); padding:6px 8px;">No playlists yet. Click '+ New' above.</div>`;
-      return;
-    }
-
-    state.playlists.forEach(pl => {
-      const item = document.createElement('button');
-      item.className = `playlist-nav-item ${state.activeView === 'playlist' && state.activePlaylistId === pl.id ? 'active' : ''}`;
-      item.innerHTML = `
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
-        <span class="playlist-nav-name" title="${pl.name}">${pl.name}</span>
-        <span class="count-tag">${pl.track_count}</span>
-      `;
-      item.onclick = () => openPlaylistView(pl.id);
-      playlistsContainer.appendChild(item);
-    });
+  // Clear All Filters Helper
+  function clearAllFilters() {
+    state.filters.decade = null;
+    state.filters.genre = null;
+    state.filters.artist = null;
+    state.filters.album = null;
+    state.filters.search = '';
+    searchInput.value = '';
+    searchClearBtn.style.display = 'none';
+    renderDecades();
+    renderGenres();
+    updateActiveFilterPills();
+    reloadActiveView();
+    showToast('Filters cleared');
   }
 
-  // Active Filter Pills in Top Bar
+  // Active Filter Pills & In-View Filter Alert Banner
   function updateActiveFilterPills() {
     activeFiltersContainer.innerHTML = '';
-    const { decade, genre, artist, album } = state.filters;
+    const { decade, genre, artist, album, search } = state.filters;
+    const filterBanner = document.getElementById('active-filter-banner');
+    const filterBannerDesc = document.getElementById('active-filter-banner-description');
+    const btnClearAllBanner = document.getElementById('btn-clear-all-banner');
+
+    const activeList = [];
 
     if (artist) {
-      addPill(`Artist: ${artist}`, () => {
+      activeList.push({ label: `Artist: ${artist}`, icon: '👤', key: 'artist' });
+      addPill('👤', `Artist: ${artist}`, () => {
         state.filters.artist = null;
         updateActiveFilterPills();
         reloadActiveView();
       });
     }
     if (album) {
-      addPill(`Album: ${album}`, () => {
+      activeList.push({ label: `Album: ${album}`, icon: '💿', key: 'album' });
+      addPill('💿', `Album: ${album}`, () => {
         state.filters.album = null;
         updateActiveFilterPills();
         reloadActiveView();
       });
     }
     if (decade) {
-      addPill(`Decade: ${decade}`, () => {
+      activeList.push({ label: `Decade: ${decade}`, icon: '📅', key: 'decade' });
+      addPill('📅', `Decade: ${decade}`, () => {
         state.filters.decade = null;
         renderDecades();
         updateActiveFilterPills();
@@ -342,29 +391,60 @@
       });
     }
     if (genre) {
-      addPill(`Genre: ${genre}`, () => {
+      activeList.push({ label: `Genre: ${genre}`, icon: '⚡', key: 'genre' });
+      addPill('⚡', `Genre: ${genre}`, () => {
         state.filters.genre = null;
         renderGenres();
         updateActiveFilterPills();
         reloadActiveView();
       });
     }
+    if (search) {
+      activeList.push({ label: `Search: "${search}"`, icon: '🔍', key: 'search' });
+      addPill('🔍', `Search: "${search}"`, () => {
+        state.filters.search = '';
+        searchInput.value = '';
+        searchClearBtn.style.display = 'none';
+        updateActiveFilterPills();
+        reloadActiveView();
+      });
+    }
+
+    if (activeList.length > 0) {
+      // Add 'Clear All' pill in top bar
+      const clearAllPill = document.createElement('button');
+      clearAllPill.className = 'clear-all-pill-btn';
+      clearAllPill.textContent = 'Clear All Filters';
+      clearAllPill.onclick = clearAllFilters;
+      activeFiltersContainer.appendChild(clearAllPill);
+
+      // Show in-view active filter banner
+      if (filterBanner && filterBannerDesc) {
+        filterBanner.style.display = 'flex';
+        const labels = activeList.map(item => `<strong>${item.label}</strong>`).join(' &bull; ');
+        const countText = state.stats?.total_tracks ? `(${state.stats.total_tracks} matching tracks)` : '';
+        filterBannerDesc.innerHTML = `${labels} <span style="opacity:0.8; margin-left:6px;">${countText}</span>`;
+        if (btnClearAllBanner) btnClearAllBanner.onclick = clearAllFilters;
+      }
+    } else {
+      if (filterBanner) filterBanner.style.display = 'none';
+    }
   }
 
-  function addPill(text, onRemove) {
+  function addPill(icon, text, onRemove) {
     const pill = document.createElement('div');
     pill.className = 'active-pill';
     pill.innerHTML = `
+      <span class="pill-icon">${icon}</span>
       <span>${text}</span>
-      <span class="remove-pill">&times;</span>
+      <span class="remove-pill" title="Remove filter">&times;</span>
     `;
     pill.querySelector('.remove-pill').onclick = onRemove;
     activeFiltersContainer.appendChild(pill);
   }
 
-  // Reload current view with smooth transition and sort parameters
+  // Reload current view with smooth transition, faceted counts, and sort parameters
   async function reloadActiveView() {
-    // Apply filtering transition class
     contentBody.classList.add('filtering');
 
     const params = new URLSearchParams();
@@ -378,6 +458,10 @@
     params.set('sortOrder', state.sort.sortOrder);
 
     try {
+      // 1. Asynchronously update dynamic faceted counts for buttons
+      updateFacetedCounts(params);
+
+      // 2. Fetch view data
       if (state.activeView === 'albums') {
         const albums = await api(`/api/albums?${params.toString()}`);
         state.albums = albums || [];
@@ -387,12 +471,14 @@
         state.tracks = data ? data.tracks : [];
         renderTracks();
       } else if (state.activeView === 'artists') {
-        const artists = await api(`/api/artists`);
+        const artists = await api(`/api/artists?${params.toString()}`);
         state.artists = artists || [];
         renderArtists();
       } else if (state.activeView === 'playlist' && state.activePlaylistId) {
         await loadPlaylistData(state.activePlaylistId);
       }
+
+      updateActiveFilterPills();
     } finally {
       setTimeout(() => {
         contentBody.classList.remove('filtering');
