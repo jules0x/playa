@@ -55,10 +55,10 @@ fastify.addHook("onRequest", async (req, reply) => {
 
   const urlPath = req.url.split("?")[0];
 
-  // Whitelist auth routes, default placeholder cover, and favicon
+  // Whitelist auth routes, cover images, and favicon
   if (
     urlPath.startsWith("/api/auth/") ||
-    urlPath === "/api/cover/default" ||
+    urlPath.startsWith("/api/cover/") ||
     urlPath === "/favicon.ico"
   ) {
     return;
@@ -272,6 +272,39 @@ fastify.get("/api/cover/:hash", async (req, reply) => {
       .header("Cache-Control", "public, max-age=31536000, immutable")
       .type("image/jpeg")
       .send(fs.createReadStream(coverPath));
+  }
+
+  // Fallback to local repo covers directory if DATA_DIR is a custom mount (like /var/data)
+  const localRepoCover = path.resolve("./data/covers", `${hash}.jpg`);
+  if (fs.existsSync(localRepoCover)) {
+    return reply
+      .header("Cache-Control", "public, max-age=31536000, immutable")
+      .type("image/jpeg")
+      .send(fs.createReadStream(localRepoCover));
+  }
+
+  // Stream directly from DigitalOcean Spaces if missing on disk and cache for future requests
+  if (isSpacesConfigured()) {
+    try {
+      const s3Response = await getSpacesObjectStream(`covers/${hash}.jpg`);
+      if (s3Response && s3Response.Body) {
+        const chunks = [];
+        for await (const chunk of s3Response.Body) {
+          chunks.push(chunk);
+        }
+        const data = Buffer.concat(chunks);
+        try {
+          fs.writeFileSync(coverPath, data);
+        } catch (e) {}
+
+        return reply
+          .header("Cache-Control", "public, max-age=31536000, immutable")
+          .type("image/jpeg")
+          .send(data);
+      }
+    } catch (err) {
+      // Image not in Spaces covers/
+    }
   }
 
   return reply.type("image/svg+xml").send(DEFAULT_COVER_SVG);
