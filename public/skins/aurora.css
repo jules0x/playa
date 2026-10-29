@@ -229,8 +229,70 @@ html[data-skin="aurora"] .view-title {
   -webkit-text-fill-color: transparent;
 }
 
+/* Aurora view-header controls & grid density */
+html[data-skin="aurora"] .view-select {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #e0e7ff;
+  backdrop-filter: blur(12px);
+}
+
+html[data-skin="aurora"] .view-select:hover,
+html[data-skin="aurora"] .view-select:focus {
+  border-color: rgba(199, 210, 254, 0.4);
+  box-shadow: 0 0 14px rgba(129, 140, 248, 0.25);
+}
+
+html[data-skin="aurora"] .grid-cols-pill-group {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+}
+
+html[data-skin="aurora"] .grid-col-btn {
+  color: rgba(224, 231, 255, 0.65);
+}
+
+html[data-skin="aurora"] .grid-col-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+html[data-skin="aurora"] .grid-col-btn.active {
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.9), rgba(196, 181, 253, 0.9));
+  color: #1e1b4b;
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(129, 140, 248, 0.4);
+}
+
 /* ---------- Album cards ---------- */
 html[data-skin="aurora"] .albums-grid { gap: 18px; }
+html[data-skin="aurora"] .albums-grid[data-grid="3"] { gap: 24px; }
+html[data-skin="aurora"] .albums-grid[data-grid="4"] { gap: 18px; }
+html[data-skin="aurora"] .albums-grid[data-grid="5"] { gap: 15px; }
+html[data-skin="aurora"] .albums-grid[data-grid="6"] { gap: 12px; }
+
+html[data-skin="aurora"] .albums-grid[data-grid="6"] .album-card {
+  padding: 8px 8px 10px;
+}
+html[data-skin="aurora"] .albums-grid[data-grid="6"] .album-card-title {
+  font-size: 0.8rem;
+}
+html[data-skin="aurora"] .albums-grid[data-grid="6"] .album-card-artist {
+  font-size: 0.7rem;
+}
+html[data-skin="aurora"] .albums-grid[data-grid="6"] .badge-decade,
+html[data-skin="aurora"] .albums-grid[data-grid="6"] .badge-genre {
+  font-size: 0.6rem;
+  padding: 1px 6px;
+}
+
+html[data-skin="aurora"] .albums-grid[data-grid="3"] .album-card {
+  padding: 16px 16px 18px;
+}
+html[data-skin="aurora"] .albums-grid[data-grid="3"] .album-card-title {
+  font-size: 1.05rem;
+}
 html[data-skin="aurora"] .album-card {
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.025));
   border: 1px solid rgba(255, 255, 255, 0.08);

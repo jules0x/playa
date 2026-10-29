@@ -164,10 +164,39 @@
         <!-- View 1: Albums Grid -->
         <div class="view-panel active" id="view-albums">
           <div class="view-header">
-            <h2 class="view-title">Albums</h2>
-            <div class="view-meta" id="albums-header-meta">Showing all albums</div>
+            <div class="view-header-left">
+              <h2 class="view-title">Albums</h2>
+              <div class="view-meta" id="albums-header-meta">Showing all albums</div>
+            </div>
+            <div class="view-header-controls">
+              <!-- Sort Selector -->
+              <div class="view-sort-control">
+                <span class="ctrl-label">Sort:</span>
+                <select id="albums-sort-select" class="view-select" title="Sort albums">
+                  <option value="year_desc">Year (Newest)</option>
+                  <option value="year_asc">Year (Oldest)</option>
+                  <option value="album_asc">Album (A–Z)</option>
+                  <option value="album_desc">Album (Z–A)</option>
+                  <option value="artist_asc">Artist (A–Z)</option>
+                  <option value="artist_desc">Artist (Z–A)</option>
+                  <option value="tracks_desc">Most Tracks</option>
+                </select>
+              </div>
+
+              <!-- Grid Layout Columns Selector -->
+              <div class="grid-layout-control" title="Grid Columns">
+                <span class="ctrl-label">Columns:</span>
+                <div class="grid-cols-pill-group" id="albums-grid-density">
+                  <button class="grid-col-btn" data-cols="3" title="3 Columns (Spacious)">3</button>
+                  <button class="grid-col-btn" data-cols="4" title="4 Columns">4</button>
+                  <button class="grid-col-btn" data-cols="5" title="5 Columns">5</button>
+                  <button class="grid-col-btn" data-cols="6" title="6 Columns (Dense)">6</button>
+                  <button class="grid-col-btn active" data-cols="auto" title="Auto (Responsive)">Auto</button>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="albums-grid" id="albums-grid">
+          <div class="albums-grid" id="albums-grid" data-grid="auto">
             <!-- Injected via JS -->
           </div>
         </div>
@@ -402,6 +431,6 @@
 
   <script src="/skins.js"></script>
   <script src="/glow.js"></script>
-  <script src="/app.js?v=1793234900000"></script>
+  <script src="/app.js?v=1793236000000"></script>
 </body>
 </html>

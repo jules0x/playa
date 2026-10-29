@@ -32,7 +32,9 @@
     tracks: [],
     artists: [],
     playlists: [],
-    pendingAddToPlaylist: null // holds { type: 'track'|'album', data: ... }
+    pendingAddToPlaylist: null, // holds { type: 'track'|'album', data: ... }
+    albumSort: localStorage.getItem('playa:albums-sort') || 'year_desc',
+    albumGridCols: localStorage.getItem('playa:albums-grid-cols') || 'auto'
   };
 
   // DOM Elements
@@ -81,6 +83,8 @@
   const contentBody = document.getElementById('content-body');
 
   const albumsGrid = document.getElementById('albums-grid');
+  const albumsSortSelect = document.getElementById('albums-sort-select');
+  const albumsGridDensity = document.getElementById('albums-grid-density');
   const tracksList = document.getElementById('tracks-list');
   const artistsGrid = document.getElementById('artists-grid');
 
@@ -516,6 +520,7 @@
 
       // 2. Fetch view data
       if (state.activeView === 'albums') {
+        params.set('sort', state.albumSort || 'year_desc');
         const albums = await api(`/api/albums?${params.toString()}`);
         state.albums = albums || [];
         renderAlbums();
@@ -536,6 +541,73 @@
       setTimeout(() => {
         contentBody.classList.remove('filtering');
       }, 150);
+    }
+  }
+
+  // Albums Sorting Logic
+  function sortAlbumsList(albums, sortKey) {
+    const list = [...albums];
+    switch (sortKey) {
+      case 'year_asc':
+        return list.sort((a, b) => {
+          const ya = a.year != null ? a.year : 9999;
+          const yb = b.year != null ? b.year : 9999;
+          if (ya !== yb) return ya - yb;
+          return (a.album || '').localeCompare(b.album || '');
+        });
+      case 'year_desc':
+        return list.sort((a, b) => {
+          const ya = a.year != null ? a.year : -1;
+          const yb = b.year != null ? b.year : -1;
+          if (ya !== yb) return yb - ya;
+          return (a.album || '').localeCompare(b.album || '');
+        });
+      case 'album_asc':
+        return list.sort((a, b) => (a.album || '').localeCompare(b.album || ''));
+      case 'album_desc':
+        return list.sort((a, b) => (b.album || '').localeCompare(a.album || ''));
+      case 'artist_asc':
+        return list.sort((a, b) => (a.artist || '').localeCompare(b.artist || '') || (a.album || '').localeCompare(b.album || ''));
+      case 'artist_desc':
+        return list.sort((a, b) => (b.artist || '').localeCompare(a.artist || '') || (a.album || '').localeCompare(b.album || ''));
+      case 'tracks_desc':
+        return list.sort((a, b) => (b.track_count || 0) - (a.track_count || 0) || (a.album || '').localeCompare(b.album || ''));
+      default:
+        return list;
+    }
+  }
+
+  // Albums Grid Density / Column Layout Control
+  function setAlbumsGridCols(cols) {
+    state.albumGridCols = cols;
+    try { localStorage.setItem('playa:albums-grid-cols', cols); } catch (e) {}
+    if (albumsGrid) {
+      albumsGrid.dataset.grid = cols;
+    }
+    document.querySelectorAll('#albums-grid-density .grid-col-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.cols === cols);
+    });
+  }
+
+  function initAlbumControls() {
+    setAlbumsGridCols(state.albumGridCols);
+
+    if (albumsGridDensity) {
+      albumsGridDensity.addEventListener('click', (e) => {
+        const btn = e.target.closest('.grid-col-btn');
+        if (!btn || !btn.dataset.cols) return;
+        setAlbumsGridCols(btn.dataset.cols);
+      });
+    }
+
+    if (albumsSortSelect) {
+      albumsSortSelect.value = state.albumSort;
+      albumsSortSelect.addEventListener('change', () => {
+        state.albumSort = albumsSortSelect.value;
+        try { localStorage.setItem('playa:albums-sort', state.albumSort); } catch (e) {}
+        state.albums = sortAlbumsList(state.albums, state.albumSort);
+        renderAlbums();
+      });
     }
   }
 
@@ -1586,8 +1658,9 @@
     }
   });
 
-  // Initialize Collapsible Sidebar Filters
+  // Initialize Collapsible Sidebar Filters & Album View Controls
   initCollapsibleSidebar();
+  initAlbumControls();
 
   // Boot Application with Vault Authentication
   checkAuthAndBoot();

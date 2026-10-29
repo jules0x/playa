@@ -555,9 +555,26 @@ fastify.get("/api/artists", async (req) => {
   return db.prepare(sql).all(params);
 });
 
-// 7. Albums Aggregation with Faceted Counts
+// 7. Albums Aggregation with Faceted Counts & Sorting
 fastify.get("/api/albums", async (req) => {
   const { joinFts, whereClause, params } = buildFilterConditions(req.query, "album");
+  const sort = req.query.sort || "year_desc";
+  let orderBy = "tracks.year DESC NULLS LAST, tracks.album COLLATE NOCASE ASC";
+
+  if (sort === "year_asc") {
+    orderBy = "tracks.year ASC NULLS LAST, tracks.album COLLATE NOCASE ASC";
+  } else if (sort === "album_asc") {
+    orderBy = "tracks.album COLLATE NOCASE ASC";
+  } else if (sort === "album_desc") {
+    orderBy = "tracks.album COLLATE NOCASE DESC";
+  } else if (sort === "artist_asc") {
+    orderBy = "COALESCE(NULLIF(tracks.album_artist, ''), tracks.artist) COLLATE NOCASE ASC, tracks.album COLLATE NOCASE ASC";
+  } else if (sort === "artist_desc") {
+    orderBy = "COALESCE(NULLIF(tracks.album_artist, ''), tracks.artist) COLLATE NOCASE DESC, tracks.album COLLATE NOCASE ASC";
+  } else if (sort === "tracks_desc") {
+    orderBy = "track_count DESC, tracks.album COLLATE NOCASE ASC";
+  }
+
   const sql = `
     SELECT tracks.album,
            COALESCE(NULLIF(tracks.album_artist, ''), tracks.artist) as artist,
@@ -567,7 +584,7 @@ fastify.get("/api/albums", async (req) => {
     ${joinFts}
     ${whereClause}
     GROUP BY tracks.album, COALESCE(NULLIF(tracks.album_artist, ''), tracks.artist)
-    ORDER BY tracks.year DESC, tracks.album COLLATE NOCASE ASC
+    ORDER BY ${orderBy}
   `;
   return db.prepare(sql).all(params);
 });

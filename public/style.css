@@ -655,10 +655,18 @@ body {
 }
 
 .view-header {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.view-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .view-title {
@@ -672,11 +680,182 @@ body {
   font-size: 0.85rem;
 }
 
-/* Albums Grid */
+.view-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.view-sort-control,
+.grid-layout-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ctrl-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.view-select {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.view-select:hover,
+.view-select:focus {
+  border-color: var(--border-accent);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.25);
+}
+
+.grid-cols-pill-group {
+  display: flex;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 2px;
+}
+
+.grid-col-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.grid-col-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.grid-col-btn.active {
+  background: var(--accent-gradient);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.35);
+}
+
+/* Albums Grid & Columns Layout */
 .albums-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 20px;
+  transition: gap 0.2s ease;
+}
+
+.albums-grid[data-grid="3"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.albums-grid[data-grid="4"] {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.albums-grid[data-grid="5"] {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.albums-grid[data-grid="6"] {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.albums-grid[data-grid="auto"] {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 20px;
+}
+
+/* Dense 6-wide card optimizations */
+.albums-grid[data-grid="6"] .album-card {
+  padding: 9px 9px 11px;
+}
+
+.albums-grid[data-grid="6"] .album-card-title {
+  font-size: 0.82rem;
+}
+
+.albums-grid[data-grid="6"] .album-card-artist {
+  font-size: 0.72rem;
+}
+
+.albums-grid[data-grid="6"] .badge-decade,
+.albums-grid[data-grid="6"] .badge-genre {
+  font-size: 0.62rem;
+  padding: 2px 6px;
+}
+
+.albums-grid[data-grid="6"] .play-album-overlay {
+  width: 36px;
+  height: 36px;
+}
+
+/* Spacious 3-wide card optimizations */
+.albums-grid[data-grid="3"] .album-card {
+  padding: 16px 16px 18px;
+}
+
+.albums-grid[data-grid="3"] .album-card-title {
+  font-size: 1.05rem;
+}
+
+.albums-grid[data-grid="3"] .album-card-artist {
+  font-size: 0.86rem;
+}
+
+/* Responsive grid fallbacks */
+@media (max-width: 1300px) {
+  .albums-grid[data-grid="6"] {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1050px) {
+  .albums-grid[data-grid="6"],
+  .albums-grid[data-grid="5"] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 850px) {
+  .albums-grid[data-grid="6"],
+  .albums-grid[data-grid="5"],
+  .albums-grid[data-grid="4"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .albums-grid[data-grid="6"],
+  .albums-grid[data-grid="5"],
+  .albums-grid[data-grid="4"],
+  .albums-grid[data-grid="3"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
 }
 
 .album-card {
