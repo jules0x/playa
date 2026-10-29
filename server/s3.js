@@ -1,20 +1,30 @@
+import "dotenv/config";
 import { S3Client, GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const KEY = process.env.SPACES_KEY || process.env.DO_SPACES_KEY;
-const SECRET = process.env.SPACES_SECRET || process.env.DO_SPACES_SECRET;
-const ENDPOINT = process.env.SPACES_ENDPOINT || process.env.DO_SPACES_ENDPOINT;
-const BUCKET = process.env.SPACES_BUCKET || process.env.DO_SPACES_BUCKET;
-const REGION = process.env.SPACES_REGION || process.env.DO_SPACES_REGION || "us-east-1";
+function getCredentials() {
+  const KEY = process.env.SPACES_KEY || process.env.DO_SPACES_KEY;
+  const SECRET = process.env.SPACES_SECRET || process.env.DO_SPACES_SECRET;
+  const ENDPOINT = process.env.SPACES_ENDPOINT || process.env.DO_SPACES_ENDPOINT;
+  const BUCKET = process.env.SPACES_BUCKET || process.env.DO_SPACES_BUCKET;
+  const REGION = process.env.SPACES_REGION || process.env.DO_SPACES_REGION || "us-east-1";
+  return { KEY, SECRET, ENDPOINT, BUCKET, REGION };
+}
 
 let s3Client = null;
 
 export function isSpacesConfigured() {
+  const { KEY, SECRET, ENDPOINT, BUCKET } = getCredentials();
   return Boolean(KEY && SECRET && ENDPOINT && BUCKET);
+}
+
+export function getBucketName() {
+  return getCredentials().BUCKET;
 }
 
 export function getS3Client() {
   if (!isSpacesConfigured()) return null;
+  const { KEY, SECRET, ENDPOINT, BUCKET, REGION } = getCredentials();
   if (!s3Client) {
     let cleanEndpoint = ENDPOINT.startsWith("http") ? ENDPOINT : `https://${ENDPOINT}`;
     cleanEndpoint = cleanEndpoint.replace(/\/+$/, "");
@@ -51,6 +61,7 @@ export function getS3Client() {
 export async function getPresignedStreamUrl(objectKey, expiresInSeconds = 3600) {
   const client = getS3Client();
   if (!client) return null;
+  const { BUCKET } = getCredentials();
 
   const command = new GetObjectCommand({
     Bucket: BUCKET,
@@ -64,6 +75,7 @@ export async function getPresignedStreamUrl(objectKey, expiresInSeconds = 3600) 
 export async function getSpacesObjectStream(objectKey, rangeHeader = null) {
   const client = getS3Client();
   if (!client) throw new Error("Spaces not configured");
+  const { BUCKET } = getCredentials();
 
   const params = {
     Bucket: BUCKET,
@@ -81,6 +93,7 @@ export async function getSpacesObjectStream(objectKey, rangeHeader = null) {
 export async function listSpacesAudioFiles(prefix = "") {
   const client = getS3Client();
   if (!client) return [];
+  const { BUCKET } = getCredentials();
 
   const audioExtensions = new Set([".mp3", ".flac", ".ogg", ".m4a", ".wav", ".aac"]);
   const files = [];
