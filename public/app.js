@@ -49,13 +49,18 @@
   const volMuteIcon = document.getElementById('vol-mute-icon');
 
   const playerCover = document.getElementById('player-cover');
+  const playerCoverBox = document.getElementById('player-cover-box');
   const playerTitle = document.getElementById('player-title');
+  const playerFormatBadge = document.getElementById('player-format-badge');
   const playerArtist = document.getElementById('player-artist');
   const currentTimeEl = document.getElementById('current-time');
   const totalTimeEl = document.getElementById('total-time');
   const scrubberBar = document.getElementById('scrubber-bar');
   const scrubberFill = document.getElementById('scrubber-fill');
   const scrubberHandle = document.getElementById('scrubber-handle');
+  const scrubberTooltip = document.getElementById('scrubber-tooltip');
+  const playerQueueBtn = document.getElementById('player-queue-btn');
+  const playerQueueCount = document.getElementById('player-queue-count');
   const volumeSlider = document.getElementById('volume-slider');
   const volumeFill = document.getElementById('volume-fill');
 
@@ -552,7 +557,7 @@
 
       card.innerHTML = `
         <div class="album-art-wrap">
-          <img src="${coverUrl}" alt="${alb.album}" loading="lazy">
+          <img src="${coverUrl}" alt="${alb.album}" class="img-lazy" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.src='/api/cover/default'; this.classList.add('loaded');">
           <button class="album-add-playlist-btn" title="Add Album to Playlist">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           </button>
@@ -653,7 +658,7 @@
       tr.innerHTML = `
         <td class="track-num-cell">${idx + 1}</td>
         <td class="track-title-cell">
-          <img src="${coverUrl}" class="track-thumb" alt="cover">
+          <img src="${coverUrl}" class="track-thumb img-lazy" alt="cover" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.src='/api/cover/default'; this.classList.add('loaded');">
           <span>${track.title}</span>
         </td>
         <td>${track.artist}</td>
@@ -702,7 +707,7 @@
       const coverUrl = `/api/cover/${art.cover_hash || 'default'}`;
 
       card.innerHTML = `
-        <img src="${coverUrl}" class="artist-avatar" alt="${art.artist}">
+        <img src="${coverUrl}" class="artist-avatar img-lazy" alt="${art.artist}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.src='/api/cover/default'; this.classList.add('loaded');">
         <div class="artist-name">${art.artist}</div>
         <div class="artist-sub">${art.album_count} Albums • ${art.track_count} Tracks</div>
       `;
@@ -803,7 +808,7 @@
       tr.innerHTML = `
         <td class="track-num-cell">${idx + 1}</td>
         <td class="track-title-cell">
-          <img src="${coverUrl}" class="track-thumb" alt="cover">
+          <img src="${coverUrl}" class="track-thumb img-lazy" alt="cover" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.src='/api/cover/default'; this.classList.add('loaded');">
           <span>${track.title}</span>
         </td>
         <td>${track.artist}</td>
@@ -1067,19 +1072,39 @@
     updateQueueDrawer();
   }
 
+  function getTrackAudioFormat(track) {
+    if (!track) return '';
+    const fp = (track.filepath || '').toLowerCase();
+    if (fp.endsWith('.flac')) return 'FLAC';
+    if (fp.endsWith('.wav')) return 'WAV';
+    if (fp.endsWith('.aiff') || fp.endsWith('.aif')) return 'AIFF';
+    if (fp.endsWith('.m4a') || fp.endsWith('.aac')) return 'AAC';
+    if (fp.endsWith('.ogg')) return 'OGG';
+    if (fp.endsWith('.mp3')) return 'MP3';
+    return 'HI-FI';
+  }
+
   function updatePlayerUI() {
     if (state.currentTrack) {
       playerTitle.textContent = state.currentTrack.title;
       playerArtist.textContent = `${state.currentTrack.artist} — ${state.currentTrack.album}`;
       playerCover.src = `/api/cover/${state.currentTrack.cover_hash || 'default'}`;
+      if (playerFormatBadge) {
+        playerFormatBadge.textContent = getTrackAudioFormat(state.currentTrack);
+        playerFormatBadge.style.display = 'inline-block';
+      }
+    } else {
+      if (playerFormatBadge) playerFormatBadge.style.display = 'none';
     }
 
     if (state.isPlaying) {
       playIcon.style.display = 'none';
       pauseIcon.style.display = 'block';
+      btnPlay.classList.add('playing');
     } else {
       playIcon.style.display = 'block';
       pauseIcon.style.display = 'none';
+      btnPlay.classList.remove('playing');
     }
   }
 
@@ -1098,6 +1123,7 @@
   function updateQueueDrawer() {
     queueList.innerHTML = '';
     queueCountBadge.textContent = state.queue.length;
+    if (playerQueueCount) playerQueueCount.textContent = state.queue.length;
 
     if (state.queue.length === 0) {
       queueList.innerHTML = `<div class="empty-queue-msg">Queue is empty. Select a track or album!</div>`;
@@ -1110,7 +1136,7 @@
       const coverUrl = `/api/cover/${track.cover_hash || 'default'}`;
 
       item.innerHTML = `
-        <img src="${coverUrl}" class="queue-item-thumb" alt="cover">
+        <img src="${coverUrl}" class="queue-item-thumb img-lazy" alt="cover" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.src='/api/cover/default'; this.classList.add('loaded');">
         <div class="queue-item-info">
           <div class="queue-item-title">${track.title}</div>
           <div class="queue-item-artist">${track.artist}</div>
@@ -1180,7 +1206,22 @@
     audio.currentTime = ratio * audio.duration;
   });
 
-  // Volume Slider
+  // Scrubber Hover Preview Tooltip
+  scrubberBar.addEventListener('mousemove', (e) => {
+    if (!audio.duration || !scrubberTooltip) return;
+    const rect = scrubberBar.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const hoverTime = ratio * audio.duration;
+    scrubberTooltip.textContent = formatTime(hoverTime);
+    scrubberTooltip.style.left = `${ratio * 100}%`;
+    scrubberTooltip.classList.add('visible');
+  });
+
+  scrubberBar.addEventListener('mouseleave', () => {
+    if (scrubberTooltip) scrubberTooltip.classList.remove('visible');
+  });
+
+  // Volume Slider & Mouse Wheel Control
   volumeSlider.addEventListener('click', (e) => {
     const rect = volumeSlider.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
@@ -1188,6 +1229,18 @@
     volumeFill.style.width = `${ratio * 100}%`;
     updateVolumeIcon(ratio);
   });
+
+  const volumeContainer = document.querySelector('.volume-container');
+  if (volumeContainer) {
+    volumeContainer.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.05 : -0.05;
+      const newVol = Math.max(0, Math.min(1, parseFloat((audio.volume + delta).toFixed(2))));
+      audio.volume = newVol;
+      volumeFill.style.width = `${newVol * 100}%`;
+      updateVolumeIcon(newVol);
+    }, { passive: false });
+  }
 
   function updateVolumeIcon(vol) {
     if (vol === 0) {
@@ -1283,13 +1336,51 @@
     reloadActiveView();
   });
 
-  // Queue Drawer Toggle
-  toggleQueueBtn.addEventListener('click', () => {
+  // Queue Drawer Toggle & Sync
+  function toggleQueueDrawer() {
     queueDrawer.classList.toggle('open');
-  });
+    const isOpen = queueDrawer.classList.contains('open');
+    if (playerQueueBtn) playerQueueBtn.classList.toggle('active', isOpen);
+    if (toggleQueueBtn) toggleQueueBtn.classList.toggle('active', isOpen);
+  }
+
+  toggleQueueBtn.addEventListener('click', toggleQueueDrawer);
+  if (playerQueueBtn) playerQueueBtn.addEventListener('click', toggleQueueDrawer);
   closeQueueBtn.addEventListener('click', () => {
     queueDrawer.classList.remove('open');
+    if (playerQueueBtn) playerQueueBtn.classList.remove('active');
+    if (toggleQueueBtn) toggleQueueBtn.classList.remove('active');
   });
+
+  // Collapsible Sidebar Sections
+  function initCollapsibleSidebar() {
+    let saved = {};
+    try {
+      saved = JSON.parse(localStorage.getItem('playa:collapsed-sections') || '{}');
+    } catch (e) {
+      saved = {};
+    }
+
+    document.querySelectorAll('.sidebar-section.collapsible').forEach(section => {
+      const sectionKey = section.dataset.section;
+      if (sectionKey && saved[sectionKey]) {
+        section.classList.add('collapsed');
+      }
+
+      const titleWrap = section.querySelector('.section-title-wrap');
+      if (titleWrap) {
+        titleWrap.addEventListener('click', (e) => {
+          if (e.target.closest('button')) return;
+          section.classList.toggle('collapsed');
+          const isCollapsed = section.classList.contains('collapsed');
+          if (sectionKey) {
+            saved[sectionKey] = isCollapsed;
+            localStorage.setItem('playa:collapsed-sections', JSON.stringify(saved));
+          }
+        });
+      }
+    });
+  }
 
   // Rescan Trigger
   rescanBtn.addEventListener('click', async () => {
@@ -1305,7 +1396,6 @@
   });
 
   // 1. If playing an album, clicking the thumbnail shows that album's tracks
-  const playerCoverBox = document.querySelector('.player-cover-box');
   if (playerCoverBox) {
     playerCoverBox.title = "View album tracks";
     playerCoverBox.addEventListener('click', () => {
@@ -1495,6 +1585,9 @@
       if (audio.duration) audio.currentTime = Math.max(0, audio.currentTime - 5);
     }
   });
+
+  // Initialize Collapsible Sidebar Filters
+  initCollapsibleSidebar();
 
   // Boot Application with Vault Authentication
   checkAuthAndBoot();

@@ -63,10 +63,84 @@ body {
   border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
-  padding: 20px 16px;
-  gap: 22px;
+  padding: 20px 16px 14px 16px;
+  gap: 16px;
   flex-shrink: 0;
+  height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.sidebar-section[data-section="genres"] {
+  flex: 1 1 auto;
+  min-height: 120px;
+}
+
+.sidebar-section[data-section="genres"].collapsed {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  user-select: none;
+}
+
+.section-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.section-title-wrap:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.section-chevron {
+  color: var(--text-dim);
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.sidebar-section.collapsed .section-chevron {
+  transform: rotate(-90deg);
+}
+
+.collapsible-content {
+  overflow: hidden;
+  transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+  max-height: 800px;
+  opacity: 1;
+}
+
+.sidebar-section[data-section="genres"] .collapsible-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: none;
+}
+
+.sidebar-section.collapsed .collapsible-content {
+  max-height: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .brand {
@@ -117,13 +191,6 @@ body {
   letter-spacing: 1.2px;
   color: var(--text-dim);
   text-transform: uppercase;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
 }
 
 .clear-btn {
@@ -246,10 +313,13 @@ body {
 .genres-chips {
   display: flex;
   flex-wrap: wrap;
+  align-content: flex-start;
   gap: 6px;
-  max-height: 180px;
+  flex: 1 1 auto;
+  min-height: 80px;
+  max-height: none;
   overflow-y: auto;
-  padding-right: 2px;
+  padding-right: 4px;
 }
 
 .genre-badge {
@@ -971,6 +1041,13 @@ body {
   background: #0f121a;
   flex-shrink: 0;
   border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.player-cover-box:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.35);
 }
 
 .player-cover-box img {
@@ -987,6 +1064,16 @@ body {
 
 .player-details {
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.player-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
 }
 
 .player-title {
@@ -996,7 +1083,26 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 2px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.player-title:hover {
+  color: var(--accent-cyan);
+}
+
+.badge-format {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(var(--accent-rgb), 0.15);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(var(--accent-rgb), 0.35);
+  text-transform: uppercase;
+  flex-shrink: 0;
 }
 
 .player-artist {
@@ -1056,6 +1162,19 @@ body {
   color: var(--on-accent);
 }
 
+.play-main-btn.playing {
+  animation: play-pulse 2.2s infinite ease-in-out;
+}
+
+@keyframes play-pulse {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.5), 0 0 22px rgba(var(--accent2-rgb), 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.8), 0 0 34px rgba(var(--accent2-rgb), 0.5);
+  }
+}
+
 /* Scrubber */
 .progress-bar-container {
   display: flex;
@@ -1113,16 +1232,86 @@ body {
   opacity: 1;
 }
 
-/* Extras (Visualizer & Volume) */
+.scrubber-tooltip {
+  position: absolute;
+  top: -28px;
+  left: 0;
+  transform: translateX(-50%);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  white-space: nowrap;
+  z-index: 20;
+}
+
+.scrubber:hover .scrubber-tooltip.visible {
+  opacity: 1;
+}
+
+/* Extras (Visualizer, Queue Toggle & Volume) */
 .player-extras {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 18px;
+  gap: 16px;
+}
+
+.player-queue-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.player-queue-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  border-color: rgba(var(--accent-rgb), 0.35);
+}
+
+.player-queue-toggle.active {
+  background: rgba(var(--accent-rgb), 0.18);
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+}
+
+.player-queue-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--accent-gradient);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  min-width: 15px;
+  height: 15px;
+  line-height: 15px;
+  text-align: center;
+  border-radius: 8px;
+  padding: 0 3px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .spectrum-canvas {
-  width: 140px;
+  width: 130px;
   height: 28px;
   opacity: 0.85;
 }
@@ -1157,6 +1346,17 @@ body {
   background: var(--accent-cyan);
   border-radius: 3px;
   pointer-events: none;
+}
+
+/* Lazy Loaded Image Transitions */
+.img-lazy {
+  opacity: 0;
+  transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity;
+}
+
+.img-lazy.loaded {
+  opacity: 1;
 }
 
 /* Custom Scrollbars */
