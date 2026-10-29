@@ -1,0 +1,1207 @@
+/* ==========================================================================
+   Playa Skin: VINTAGE HI-FI (Option 1A: 1970s Silverface & Walnut Tower Stack)
+   Inspired by classic Winamp full skins & legendary Marantz/Pioneer Hi-Fi separates.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+/* Default state: Hide Hi-Fi stack in other skins */
+#hifi-stack-container {
+  display: none;
+}
+
+html[data-skin="hifi"] {
+  --bg-base: #0f0a06;
+  --bg-surface: #18110b;
+  --bg-card: #221810;
+  --accent-rgb: 255, 184, 52;
+  --accent-cyan: #ffb834;
+  --on-accent: #1a0f05;
+  --font-main: 'Chakra Petch', -apple-system, sans-serif;
+  --font-mono: 'Share Tech Mono', monospace;
+}
+
+/* Hide standard dashboard & bottom bar when in Hi-Fi stack mode */
+html[data-skin="hifi"] .app-layout,
+html[data-skin="hifi"] .player-bar,
+html[data-skin="hifi"] #ambient-glow-canvas {
+  display: none !important;
+}
+
+/* Enable Hi-Fi Component Stack */
+html[data-skin="hifi"] #hifi-stack-container {
+  display: flex !important;
+}
+
+html[data-skin="hifi"] body {
+  background: 
+    radial-gradient(ellipse at 50% 25%, rgba(255, 184, 52, 0.08) 0%, transparent 65%),
+    radial-gradient(ellipse at 80% 80%, rgba(0, 229, 255, 0.04) 0%, transparent 50%),
+    linear-gradient(180deg, #18100a 0%, #0d0805 100%);
+  color: #f7ecd5;
+  font-family: var(--font-main);
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  user-select: none;
+}
+
+/* ==========================================================================
+   Outer Shell: Centered Luxury Walnut Cabinet Enclosure
+   ========================================================================== */
+
+.hifi-stack-container {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  box-sizing: border-box;
+}
+
+.hifi-tower-shell {
+  width: 100%;
+  max-width: 1020px;
+  position: relative;
+  display: flex;
+  box-shadow: 
+    0 28px 70px rgba(0, 0, 0, 0.95),
+    0 4px 16px rgba(0, 0, 0, 0.8);
+  border-radius: 4px;
+}
+
+/* Oiled American Walnut Side Cheeks */
+.walnut-cheek {
+  width: 32px;
+  background: 
+    repeating-linear-gradient(180deg, 
+      #3a2213 0px, 
+      #442918 3px, 
+      #351f11 6px, 
+      #4c2e1b 10px, 
+      #2f1b0e 15px
+    ),
+    linear-gradient(90deg, #2a160b 0%, #4a2b18 50%, #1f0f07 100%);
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 200, 130, 0.3),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.8),
+    3px 0 10px rgba(0, 0, 0, 0.7);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 5;
+}
+
+.walnut-cheek-left {
+  border-radius: 4px 0 0 4px;
+  border-right: 2px solid #140a04;
+}
+
+.walnut-cheek-right {
+  border-radius: 0 4px 4px 0;
+  border-left: 2px solid #140a04;
+}
+
+/* Walnut Cheek Fastener Screws */
+.walnut-cheek::before,
+.walnut-cheek::after {
+  content: '+';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 700;
+  width: 15px;
+  height: 15px;
+  line-height: 13px;
+  text-align: center;
+  color: #7d725f;
+  background: radial-gradient(circle, #e2dac9 20%, #7d7565 80%, #3a352b 100%);
+  border-radius: 50%;
+  border: 1px solid #15100a;
+  box-shadow: inset 0 1px 1px #fff, 0 2px 4px rgba(0,0,0,0.8);
+}
+.walnut-cheek::before { top: 16px; }
+.walnut-cheek::after { bottom: 16px; }
+
+/* The 3 Stacked Component Units */
+.hifi-chassis-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  overflow: hidden;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.8);
+}
+
+.hifi-deck {
+  background: 
+    linear-gradient(180deg, 
+      #fcf8f0 0%, 
+      #ede4d5 2%, 
+      #ded4c2 6%, 
+      #ece3d4 25%, 
+      #f8f4ea 55%, 
+      #d7cebd 85%, 
+      #b3a895 98%, 
+      #706653 100%
+    );
+  border-top: 1px solid #ffffff;
+  border-bottom: 2px solid #18120b;
+  padding: 12px 22px 14px;
+  position: relative;
+  box-shadow: inset 0 1px 0 #fff, inset 0 -1px 0 #8c826e;
+}
+
+/* Deck Header Silk-Screening */
+.hifi-deck-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(120, 105, 80, 0.35);
+  padding-bottom: 4px;
+}
+
+.hifi-deck-title {
+  font-family: var(--font-main);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #3b3223;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.hifi-deck-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hifi-model-no {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  color: #594d38;
+  font-weight: 600;
+}
+
+.hifi-skin-btn {
+  background: linear-gradient(180deg, #f2edd9 0%, #d4caa8 100%);
+  border: 1px solid #6b5d44;
+  border-top-color: #fff;
+  border-radius: 2px;
+  padding: 2px 8px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: #1a1207;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 #fff;
+}
+.hifi-skin-btn:hover {
+  background: #fff;
+}
+
+/* ==========================================================================
+   DECK 1: FM STEREO TUNER & PREAMPLIFIER ST-700
+   ========================================================================== */
+
+.hifi-tuner-main-row {
+  display: grid;
+  grid-template-columns: 240px 1fr 100px;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+/* Dual Backlit Analog VU Meter Bay */
+.hifi-vu-bay {
+  background: #0f0a06;
+  border: 2px solid #574b3a;
+  border-top-color: #383025;
+  border-bottom-color: #8c7c64;
+  border-radius: 3px;
+  padding: 3px;
+  box-shadow: 
+    inset 0 3px 8px rgba(0, 0, 0, 0.95),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+  position: relative;
+}
+
+.hifi-vu-bay canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.hifi-vu-label {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.16em;
+  color: #caa352;
+  margin-top: 2px;
+  text-shadow: 0 0 6px rgba(255, 184, 52, 0.4);
+}
+
+/* Ice-Blue Backlit Tuner Glass Bay */
+.hifi-tuner-dial-bay {
+  background: #021a24;
+  border: 2px solid #574b3a;
+  border-top-color: #383025;
+  border-bottom-color: #8c7c64;
+  border-radius: 3px;
+  height: 98px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    inset 0 3px 12px rgba(0, 0, 0, 0.95),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+}
+
+/* Rich Ice-Blue Illuminated Glow */
+.hifi-tuner-glass-glow {
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(ellipse at 50% 40%, rgba(0, 229, 255, 0.32) 0%, rgba(0, 150, 180, 0.18) 60%, transparent 100%),
+    linear-gradient(180deg, #032331 0%, #01131c 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 8px 16px 6px;
+  box-shadow: inset 0 0 25px rgba(0, 229, 255, 0.25);
+}
+
+/* Glass Specular Glare across Top */
+.hifi-tuner-glass-glow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 38px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.hifi-tuner-scales {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 2;
+}
+
+.hifi-scale-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: #38f0ff;
+  text-shadow: 0 0 8px #00e5ff, 0 0 16px rgba(0, 229, 255, 0.6);
+}
+
+.hifi-scale-am {
+  color: #26bacc;
+  font-size: 0.62rem;
+}
+
+.scale-label, .scale-unit {
+  font-weight: 700;
+  width: 32px;
+}
+
+/* Bright Red Illuminated Tuner Cursor Needle */
+.hifi-tuner-cursor-needle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 10%;
+  width: 3px;
+  background: #ff2a00;
+  box-shadow: 
+    0 0 8px #ff2a00,
+    0 0 16px rgba(255, 42, 0, 0.8),
+    0 0 24px rgba(255, 60, 0, 0.5);
+  border-radius: 1px;
+  z-index: 4;
+  transition: left 0.15s ease-out;
+  pointer-events: none;
+}
+
+/* Stereo Pilot Lamp */
+.hifi-stereo-indicator {
+  position: absolute;
+  bottom: 6px;
+  left: 16px;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: #ff3300;
+  opacity: 0.4;
+  letter-spacing: 0.1em;
+  z-index: 3;
+}
+.hifi-stereo-indicator.active {
+  opacity: 1;
+  text-shadow: 0 0 10px #ff3300;
+}
+
+/* Integrated Live Track Readout */
+.hifi-tuner-readout {
+  position: absolute;
+  bottom: 5px;
+  right: 16px;
+  text-align: right;
+  z-index: 3;
+}
+
+.hifi-tuner-readout-title {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ffeed1;
+  text-shadow: 0 0 10px rgba(255, 184, 52, 0.8);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  max-width: 340px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hifi-tuner-readout-artist {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: #6ee7b7;
+  text-shadow: 0 0 6px rgba(110, 231, 183, 0.6);
+  letter-spacing: 0.08em;
+}
+
+/* Knurled Weighted Tuning Flywheel Wheel */
+.hifi-tuning-wheel-bay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.hifi-wheel-knob {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: 
+    radial-gradient(circle, #fcf9f2 20%, #dcd3c1 55%, #8c826e 90%, #3e372b 100%);
+  border: 2px solid #574b3a;
+  box-shadow: 
+    0 4px 10px rgba(0, 0, 0, 0.6),
+    inset 0 1px 2px #fff,
+    inset 0 -2px 4px #000;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.1s ease;
+}
+.hifi-wheel-knob:hover {
+  transform: rotate(15deg);
+}
+
+.hifi-wheel-indicator {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 10px;
+  background: #ff3300;
+  border-radius: 1px;
+}
+
+.hifi-knob-caption {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  color: #4a3e2a;
+  font-weight: 700;
+}
+
+/* Deck 1 Lower Control Row (Toggles & Knobs) */
+.hifi-deck-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid rgba(120, 105, 80, 0.25);
+}
+
+.hifi-toggles-group {
+  display: flex;
+  gap: 16px;
+}
+
+.hifi-toggle-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.hifi-toggle-label {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
+  color: #4f422e;
+  font-weight: 700;
+}
+
+/* Silver Toggle Lever Switch */
+.hifi-toggle-switch {
+  width: 18px;
+  height: 36px;
+  background: #1e1710;
+  border: 1px solid #6b5d47;
+  border-radius: 2px;
+  position: relative;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.8), 0 1px 0 #fff;
+}
+
+.hifi-toggle-lever {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 4px;
+  height: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #cfc5b2 50%, #7d725f 100%);
+  border-radius: 2px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 1px 0 #fff;
+  transition: all 0.12s cubic-bezier(0.2, 0, 0.3, 1);
+}
+
+.hifi-toggle-switch.active .hifi-toggle-lever {
+  top: 16px;
+  background: linear-gradient(180deg, #cfc5b2 0%, #ffffff 50%, #7d725f 100%);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Rotary Dials Group */
+.hifi-knobs-group {
+  display: flex;
+  gap: 18px;
+}
+
+.hifi-rotary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.hifi-rotary-dial {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: 
+    radial-gradient(circle, #fcf8f0 20%, #d8cfbc 60%, #827866 100%);
+  border: 1px solid #4a3e2a;
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px #fff,
+    inset 0 -1px 2px #000;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.hifi-rotary-dial:hover {
+  transform: rotate(20deg);
+}
+
+.hifi-dial-notch {
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 6px;
+  background: #ff3300;
+  border-radius: 1px;
+}
+
+.hifi-knob-label {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.12em;
+  color: #4f422e;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   DECK 2: GRAPHIC EQUALIZER EQ-700
+   ========================================================================== */
+
+.hifi-deck-eq {
+  padding-bottom: 12px;
+}
+
+.hifi-eq-power-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hifi-pilot-jewel {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff3300;
+  box-shadow: 0 0 8px #ff3300, inset 0 1px 1px #fff;
+}
+
+.hifi-eq-body {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 20px;
+  align-items: center;
+}
+
+/* 10-Band Sliders Bay */
+.hifi-eq-sliders-bay {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 4px;
+}
+
+.hifi-fader-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.hifi-fader-scale {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  color: #7a6e59;
+}
+
+.hifi-fader-track {
+  width: 4px;
+  height: 68px;
+  background: #140d08;
+  border-radius: 2px;
+  border: 1px solid #4a3e2e;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.9);
+}
+
+.hifi-fader-handle {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  bottom: 50%;
+  width: 24px;
+  height: 12px;
+  background: linear-gradient(180deg, #f7f3ea 0%, #dbd1bd 50%, #8c8068 100%);
+  border: 1px solid #453724;
+  border-top-color: #fff;
+  border-radius: 2px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 1px 0 #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Illuminated Amber LED in Slider Head */
+.hifi-fader-led {
+  width: 8px;
+  height: 2px;
+  background: #ffb834;
+  box-shadow: 0 0 6px #ffb834, 0 0 10px rgba(255, 184, 52, 0.8);
+  border-radius: 1px;
+}
+
+.hifi-fader-label {
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  color: #4a3e2a;
+  font-weight: 700;
+}
+
+/* EQ Curve / Spectrum Screen Bay */
+.hifi-eq-screen-bay {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hifi-eq-screen-frame {
+  background: #0f0a06;
+  border: 2px solid #574b3a;
+  border-top-color: #383025;
+  border-bottom-color: #8c7c64;
+  border-radius: 3px;
+  height: 82px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    inset 0 3px 8px rgba(0, 0, 0, 0.95),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.hifi-eq-screen-frame canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hifi-eq-legend {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  color: #7d7059;
+  padding: 0 4px;
+}
+
+/* ==========================================================================
+   DECK 3: CASSETTE DECK CT-700
+   ========================================================================== */
+
+.hifi-deck-meta-tags {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hifi-tag {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  color: #63553f;
+  font-weight: 700;
+}
+
+.hifi-crate-toggle-btn {
+  background: linear-gradient(180deg, #f7f3ea 0%, #dbd0bb 100%);
+  border: 1px solid #5c4e36;
+  border-top-color: #fff;
+  border-radius: 2px;
+  padding: 2px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: #1a0f05;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+.hifi-crate-toggle-btn:hover {
+  background: #fff;
+}
+
+.hifi-cassette-main-row {
+  display: grid;
+  grid-template-columns: 290px 1fr;
+  gap: 18px;
+  margin-bottom: 12px;
+}
+
+/* Illuminated Cassette Door & Well */
+.hifi-cassette-well {
+  background: #0f0a06;
+  border: 2px solid #574b3a;
+  border-top-color: #383025;
+  border-bottom-color: #8c7c64;
+  border-radius: 3px;
+  height: 140px;
+  padding: 8px;
+  position: relative;
+  box-shadow: 
+    inset 0 4px 12px rgba(0, 0, 0, 0.95),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.hifi-cassette-door {
+  height: 100%;
+  background: rgba(255, 184, 52, 0.04);
+  border: 1px solid rgba(255, 200, 130, 0.2);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 16px rgba(255, 184, 52, 0.1);
+}
+
+/* Cassette Shell */
+.hifi-cassette-shell {
+  height: 100%;
+  background: linear-gradient(180deg, #1f1a14 0%, #120e0a 100%);
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  position: relative;
+}
+
+.hifi-cassette-label {
+  background: #f4edd9;
+  border: 1px solid #4a3e2a;
+  border-radius: 2px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  margin-bottom: 6px;
+  color: #1a0f05;
+}
+
+.hifi-cassette-cover-thumb {
+  width: 36px;
+  height: 36px;
+  background-size: cover;
+  background-position: center;
+  background-color: #000;
+  border-radius: 2px;
+  border: 1px solid #000;
+  flex-shrink: 0;
+}
+
+.hifi-cassette-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.tape-album {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tape-artist {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: #63533c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tape-grade {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: #b84300;
+}
+
+/* Cassette Window with Rotating Gold Spools */
+.hifi-cassette-window {
+  flex: 1;
+  background: #080503;
+  border: 1px solid #332415;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 16px;
+  position: relative;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.9);
+}
+
+.hifi-tape-reel {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: 
+    radial-gradient(circle, #ffe082 25%, #ff9800 65%, #803000 100%);
+  border: 2px solid #2e1d0e;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.8), inset 0 1px 1px #fff;
+  position: relative;
+  transition: transform 0.1s linear;
+}
+
+.hifi-tape-reel.spinning {
+  animation: hifi-reel-spin 2s infinite linear;
+}
+
+@keyframes hifi-reel-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.hifi-spool-teeth {
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  background: #140d07;
+  border: 2px dashed #ffe082;
+}
+
+.hifi-tape-bridge {
+  width: 46px;
+  height: 8px;
+  background: #2a1b10;
+  border: 1px solid #4a3422;
+  border-radius: 1px;
+}
+
+/* Amber LED Tracklist & Search Display */
+.hifi-tracklist-bay {
+  background: #0f0a06;
+  border: 2px solid #574b3a;
+  border-top-color: #383025;
+  border-bottom-color: #8c7c64;
+  border-radius: 3px;
+  height: 140px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 
+    inset 0 3px 8px rgba(0, 0, 0, 0.95),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.hifi-tape-counter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: #1a120b;
+  border-bottom: 1px solid #3d2b1a;
+}
+
+.hifi-tape-counter-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.counter-label {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  color: #8c7e66;
+}
+
+.counter-digits {
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #ffeed1;
+  background: #080503;
+  padding: 1px 6px;
+  border: 1px solid #4a3422;
+  border-radius: 2px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.9);
+}
+
+.hifi-search-wrap input {
+  background: #080503;
+  border: 1px solid #3d2b1a;
+  border-radius: 2px;
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: #ffeed1;
+  width: 170px;
+}
+.hifi-search-wrap input::placeholder {
+  color: #63533c;
+}
+
+/* Scrollable Amber Tracklist */
+.hifi-tracks-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 6px;
+}
+
+.hifi-track-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+  border-bottom: 1px solid rgba(255, 184, 52, 0.06);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.12s;
+}
+
+.hifi-track-item:hover {
+  background: rgba(255, 184, 52, 0.12);
+}
+
+.hifi-track-item.active {
+  background: rgba(255, 184, 52, 0.22);
+}
+
+.hifi-track-num {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: #ffb834;
+  width: 16px;
+}
+
+.hifi-track-meta {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  gap: 8px;
+}
+
+.hifi-track-title {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: #ffeed1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hifi-track-artist {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: #8c7f66;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hifi-track-dur {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: #a89a81;
+}
+
+.hifi-track-empty {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #63533c;
+  padding: 24px;
+}
+
+/* Mechanical Transport Piano Keys */
+.hifi-transport-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid rgba(120, 105, 80, 0.25);
+}
+
+.hifi-piano-keys {
+  display: flex;
+  gap: 10px;
+}
+
+.hifi-key {
+  height: 42px;
+  padding: 0 14px;
+  background: linear-gradient(180deg, #faf7f0 0%, #ded4c1 45%, #b3a895 100%);
+  border: 1px solid #574b3a;
+  border-top-color: #ffffff;
+  border-bottom-color: #383025;
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: #1a0f05;
+  cursor: pointer;
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 #fff;
+  transition: all 0.08s ease;
+  position: relative;
+}
+
+.hifi-key:hover {
+  background: linear-gradient(180deg, #fff 0%, #eae2d2 45%, #c2b7a4 100%);
+  transform: translateY(-1px);
+}
+
+.hifi-key:active {
+  transform: translateY(2px);
+  background: linear-gradient(180deg, #b3a895 0%, #ded4c1 100%);
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.8);
+}
+
+.key-icon {
+  font-size: 0.8rem;
+}
+
+.key-name {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* Play Key Glowing Green Jewel Lamp */
+.hifi-key-led {
+  position: absolute;
+  top: 3px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #114422;
+  border: 1px solid #000;
+}
+.hifi-key-led.active {
+  background: #39ff88;
+  box-shadow: 0 0 8px #39ff88, inset 0 1px 1px #fff;
+}
+
+.hifi-deck-specs {
+  display: flex;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  color: #63553f;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   Slide-Out Album Cassette Crate Drawer
+   ========================================================================== */
+
+.hifi-crate-drawer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #241910 0%, #150e09 100%);
+  border-radius: 4px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.98), inset 0 1px 0 rgba(255, 220, 150, 0.2);
+  transform: translateY(105%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+  border: 2px solid #573e29;
+}
+
+.hifi-crate-drawer.open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.hifi-crate-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 184, 52, 0.2);
+  padding-bottom: 10px;
+  margin-bottom: 16px;
+}
+
+.hifi-crate-header h3 {
+  font-family: var(--font-main);
+  font-size: 1.15rem;
+  letter-spacing: 0.1em;
+  color: #f7ecd5;
+}
+
+.crate-subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #a89a81;
+}
+
+.hifi-crate-close {
+  background: none;
+  border: none;
+  color: #f7ecd5;
+  font-size: 1.6rem;
+  cursor: pointer;
+}
+.hifi-crate-close:hover {
+  color: #ffb834;
+}
+
+.hifi-cassette-grid {
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.hifi-crate-tape {
+  background: #140d08;
+  border: 1px solid #453322;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.6);
+}
+
+.hifi-crate-tape:hover {
+  background: #2b1c11;
+  border-color: #ffb834;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(255, 184, 52, 0.25);
+}
+
+.hifi-tape-spine {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.spine-num {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: #ffb834;
+}
+
+.spine-title {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ffeed1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spine-artist {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: #a89a81;
+}
+
+.spine-year {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: #63533c;
+}
+
+.hifi-tape-thumb {
+  width: 44px;
+  height: 44px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 2px;
+  border: 1px solid #000;
+  flex-shrink: 0;
+}

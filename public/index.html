@@ -10,10 +10,11 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
   <!-- Skins: each file is scoped to html[data-skin="<id>"] -->
   <link rel="stylesheet" href="/skins/aurora.css">
+  <link rel="stylesheet" href="/skins/hifi.css">
 </head>
 <body>
   <!-- Interactive Ambient Background Glow Canvas -->
@@ -355,7 +356,266 @@
     </div>
   </div>
 
-  <!-- Persistent Bottom Player Bar -->
+  <!-- =====================================================================
+       1970s Silverface & Walnut Hi-Fi Component Tower Stack (Option 1A)
+       Active when html[data-skin="hifi"]
+       ===================================================================== -->
+  <div id="hifi-stack-container" class="hifi-stack-container">
+    <div class="hifi-tower-shell">
+      <!-- Left Oiled Walnut Wooden Side Cheek -->
+      <div class="walnut-cheek walnut-cheek-left"></div>
+
+      <div class="hifi-chassis-stack">
+        <!-- DECK 1: FM STEREO TUNER & PREAMPLIFIER ST-700 -->
+        <section class="hifi-deck hifi-deck-tuner">
+          <div class="hifi-deck-header">
+            <span class="hifi-deck-title">FM STEREO TUNER & PREAMPLIFIER</span>
+            <div class="hifi-deck-badge">
+              <span class="hifi-model-no">STEREO TUNER ST-700</span>
+              <button class="hifi-skin-btn" id="hifi-skin-toggle-btn" title="Change Skin">
+                <span>SKIN</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="hifi-tuner-main-row">
+            <!-- Dual Backlit Analog Needle VU Meters -->
+            <div class="hifi-vu-bay">
+              <canvas id="hifi-vu-canvas" width="220" height="92"></canvas>
+              <div class="hifi-vu-label">STEREO LEVEL</div>
+            </div>
+
+            <!-- Ice-Blue Backlit Tuner Dial Bay with Red Needle & Track Title Readout -->
+            <div class="hifi-tuner-dial-bay" id="hifi-tuner-dial-bay" title="Click anywhere along scale to tune / scrub track">
+              <div class="hifi-tuner-glass-glow">
+                <div class="hifi-tuner-scales">
+                  <div class="hifi-scale-row hifi-scale-fm">
+                    <span class="scale-label">FM</span>
+                    <span class="scale-ticks">88 &nbsp; 90 &nbsp; 92 &nbsp; 94 &nbsp; 96 &nbsp; 98 &nbsp; 100 &nbsp; 102 &nbsp; 104 &nbsp; 106 &nbsp; 108</span>
+                    <span class="scale-unit">MHz</span>
+                  </div>
+                  <div class="hifi-scale-row hifi-scale-am">
+                    <span class="scale-label">AM</span>
+                    <span class="scale-ticks">54 &nbsp; 60 &nbsp; 70 &nbsp; 80 &nbsp; 90 &nbsp; 100 &nbsp; 120 &nbsp; 140 &nbsp; 160</span>
+                    <span class="scale-unit">x10kHz</span>
+                  </div>
+                </div>
+                <div class="hifi-tuner-cursor-needle" id="hifi-tuner-needle"></div>
+                <div class="hifi-stereo-indicator" id="hifi-stereo-lamp">● STEREO</div>
+                <div class="hifi-tuner-readout" id="hifi-tuner-readout">
+                  <span class="hifi-tuner-readout-title" id="hifi-readout-title">PLAYA AUDIO VAULT</span>
+                  <span class="hifi-tuner-readout-artist" id="hifi-readout-artist">SELECT CASSETTE TO TUNE</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Knurled Weighted Tuning Wheel -->
+            <div class="hifi-tuning-wheel-bay">
+              <div class="hifi-wheel-knob" id="hifi-tuning-wheel" title="Tuning Wheel">
+                <div class="hifi-wheel-indicator"></div>
+              </div>
+              <span class="hifi-knob-caption">TUNING</span>
+            </div>
+          </div>
+
+          <!-- Lower Controls: Toggles & Rotary Knobs -->
+          <div class="hifi-deck-controls-row">
+            <div class="hifi-toggles-group">
+              <div class="hifi-toggle-item">
+                <span class="hifi-toggle-label">POWER</span>
+                <button class="hifi-toggle-switch active" id="hifi-toggle-power">
+                  <div class="hifi-toggle-lever"></div>
+                </button>
+              </div>
+              <div class="hifi-toggle-item">
+                <span class="hifi-toggle-label">MUTING</span>
+                <button class="hifi-toggle-switch" id="hifi-toggle-mute">
+                  <div class="hifi-toggle-lever"></div>
+                </button>
+              </div>
+              <div class="hifi-toggle-item">
+                <span class="hifi-toggle-label">LOUDNESS</span>
+                <button class="hifi-toggle-switch active" id="hifi-toggle-loudness">
+                  <div class="hifi-toggle-lever"></div>
+                </button>
+              </div>
+              <div class="hifi-toggle-item">
+                <span class="hifi-toggle-label">SHUFFLE</span>
+                <button class="hifi-toggle-switch" id="hifi-toggle-shuffle">
+                  <div class="hifi-toggle-lever"></div>
+                </button>
+              </div>
+            </div>
+
+            <div class="hifi-knobs-group">
+              <div class="hifi-rotary-item">
+                <div class="hifi-rotary-dial" id="hifi-volume-dial">
+                  <div class="hifi-dial-cap"></div>
+                  <div class="hifi-dial-notch"></div>
+                </div>
+                <span class="hifi-knob-label">VOLUME</span>
+              </div>
+              <div class="hifi-rotary-item">
+                <div class="hifi-rotary-dial" id="hifi-balance-dial">
+                  <div class="hifi-dial-cap"></div>
+                  <div class="hifi-dial-notch"></div>
+                </div>
+                <span class="hifi-knob-label">BALANCE</span>
+              </div>
+              <div class="hifi-rotary-item">
+                <div class="hifi-rotary-dial" id="hifi-bass-dial">
+                  <div class="hifi-dial-cap"></div>
+                  <div class="hifi-dial-notch"></div>
+                </div>
+                <span class="hifi-knob-label">BASS</span>
+              </div>
+              <div class="hifi-rotary-item">
+                <div class="hifi-rotary-dial" id="hifi-treble-dial">
+                  <div class="hifi-dial-cap"></div>
+                  <div class="hifi-dial-notch"></div>
+                </div>
+                <span class="hifi-knob-label">TREBLE</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- DECK 2: GRAPHIC EQUALIZER EQ-700 -->
+        <section class="hifi-deck hifi-deck-eq">
+          <div class="hifi-deck-header">
+            <div class="hifi-eq-power-status">
+              <span class="hifi-pilot-jewel active"></span>
+              <span class="hifi-deck-title">GRAPHIC EQUALIZER EQ-700</span>
+            </div>
+            <span class="hifi-model-no">10-BAND STEREO OCTAVE</span>
+          </div>
+
+          <div class="hifi-eq-body">
+            <!-- 10-Band Slider Controls with Glowing Amber Heads -->
+            <div class="hifi-eq-sliders-bay" id="hifi-eq-sliders"></div>
+
+            <!-- Real-Time Frequency Response Curve / Audio Spectrum Canvas -->
+            <div class="hifi-eq-screen-bay">
+              <div class="hifi-eq-screen-frame">
+                <canvas id="hifi-eq-canvas" width="360" height="96"></canvas>
+                <div class="hifi-eq-grid-overlay"></div>
+              </div>
+              <div class="hifi-eq-legend">
+                <span>32Hz</span><span>125Hz</span><span>500Hz</span><span>2kHz</span><span>8kHz</span><span>16kHz</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- DECK 3: CASSETTE DECK CT-700 -->
+        <section class="hifi-deck hifi-deck-cassette">
+          <div class="hifi-deck-header">
+            <span class="hifi-deck-title">CASSETTE DECK CT-700</span>
+            <div class="hifi-deck-meta-tags">
+              <span class="hifi-tag">DOLBY B-C NR</span>
+              <span class="hifi-tag">DIRECT DRIVE</span>
+              <button class="hifi-crate-toggle-btn" id="hifi-crate-btn" title="Open Album Cassette Crate">
+                <span>🗃 BROWSE CRATE</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="hifi-cassette-main-row">
+            <!-- Illuminated Cassette Well with Spinning Gold Reels & Tape Bridge -->
+            <div class="hifi-cassette-well" id="hifi-cassette-well">
+              <div class="hifi-cassette-door">
+                <div class="hifi-cassette-shell">
+                  <div class="hifi-cassette-label" id="hifi-cassette-label">
+                    <div class="hifi-cassette-cover-thumb" id="hifi-tape-thumb"></div>
+                    <div class="hifi-cassette-info">
+                      <span class="tape-album" id="hifi-tape-album">SELECT ALBUM</span>
+                      <span class="tape-artist" id="hifi-tape-artist">READY FOR TAPE</span>
+                    </div>
+                    <span class="tape-grade">XL-II C90</span>
+                  </div>
+                  <div class="hifi-cassette-window">
+                    <div class="hifi-tape-reel hifi-reel-left" id="hifi-reel-left">
+                      <div class="hifi-spool-teeth"></div>
+                    </div>
+                    <div class="hifi-tape-bridge"></div>
+                    <div class="hifi-tape-reel hifi-reel-right" id="hifi-reel-right">
+                      <div class="hifi-spool-teeth"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Amber LED Tracklist & Search Display -->
+            <div class="hifi-tracklist-bay">
+              <div class="hifi-tape-counter-bar">
+                <div class="hifi-tape-counter-box">
+                  <span class="counter-label">TAPE COUNTER</span>
+                  <span class="counter-digits" id="hifi-tape-counter">00:00</span>
+                </div>
+                <div class="hifi-search-wrap">
+                  <input type="text" id="hifi-track-search" placeholder="Filter vault tracks..." autocomplete="off">
+                </div>
+              </div>
+
+              <div class="hifi-tracks-scroll" id="hifi-tracks-list"></div>
+            </div>
+          </div>
+
+          <!-- Mechanical Transport Piano Keys -->
+          <div class="hifi-transport-row">
+            <div class="hifi-piano-keys">
+              <button class="hifi-key hifi-key-eject" id="hifi-btn-eject" title="Eject / Open Crate">
+                <span class="key-icon">⏏</span>
+                <span class="key-name">EJECT</span>
+              </button>
+              <button class="hifi-key hifi-key-play" id="hifi-btn-play" title="Play">
+                <span class="hifi-key-led" id="hifi-play-led"></span>
+                <span class="key-icon">▶</span>
+                <span class="key-name">PLAY</span>
+              </button>
+              <button class="hifi-key hifi-key-stop" id="hifi-btn-stop" title="Stop">
+                <span class="key-icon">■</span>
+                <span class="key-name">STOP</span>
+              </button>
+              <button class="hifi-key hifi-key-pause" id="hifi-btn-pause" title="Pause">
+                <span class="key-icon">❚❚</span>
+                <span class="key-name">PAUSE</span>
+              </button>
+              <button class="hifi-key hifi-key-rew" id="hifi-btn-rew" title="Previous Track">
+                <span class="key-icon">◀◀</span>
+                <span class="key-name">REW</span>
+              </button>
+              <button class="hifi-key hifi-key-ff" id="hifi-btn-ff" title="Next Track">
+                <span class="key-icon">▶▶</span>
+                <span class="key-name">FF</span>
+              </button>
+            </div>
+
+            <div class="hifi-deck-specs">
+              <span>HIGH POSITION CrO₂</span>
+              <span>AUTO REVERSE</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Right Oiled Walnut Wooden Side Cheek -->
+      <div class="walnut-cheek walnut-cheek-right"></div>
+
+      <!-- Slide-Out Cassette / Vinyl Crate Drawer -->
+      <div class="hifi-crate-drawer" id="hifi-crate-drawer">
+        <div class="hifi-crate-header">
+          <h3>🗃 ALBUM VAULT CRATE</h3>
+          <span class="crate-subtitle">Click any cassette to load it into the deck</span>
+          <button class="hifi-crate-close" id="hifi-crate-close">&times;</button>
+        </div>
+        <div class="hifi-cassette-grid" id="hifi-crate-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Persistent Bottom Player Bar (Used in Classic & Aurora) -->
   <footer class="player-bar">
     <div class="player-track-info">
       <div class="player-cover-box" id="player-cover-box" title="Click to view album in library">
@@ -405,8 +665,8 @@
     </div>
 
     <div class="player-extras">
-      <!-- Full Spectrum Visualizer Wave -->
-      <canvas id="waveform-visualizer" width="160" height="32" class="spectrum-canvas"></canvas>
+      <!-- Full Spectrum Visualizer Wave / Dual VU Meter -->
+      <canvas id="waveform-visualizer" width="240" height="64" class="spectrum-canvas"></canvas>
 
       <!-- Queue Drawer Toggle -->
       <button class="btn-ctrl-sm player-queue-toggle" id="player-queue-btn" title="Toggle Queue Drawer">
@@ -432,5 +692,6 @@
   <script src="/skins.js"></script>
   <script src="/glow.js"></script>
   <script src="/app.js?v=1793236000000"></script>
+  <script src="/hifi-stack.js"></script>
 </body>
 </html>

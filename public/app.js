@@ -168,6 +168,152 @@
     }
   }
 
+  // Vintage Hi-Fi Dual VU Meter ballistics tracking
+  const vuState = {
+    needleL: -2.35,
+    needleR: -2.35,
+    peakL: 0,
+    peakR: 0
+  };
+
+  function drawAnalogVuMeter(ctx, x, y, w, h, angle, label, isPeak) {
+    ctx.save();
+    // Meter Face Backlight
+    const faceGrad = ctx.createRadialGradient(x + w / 2, y + h * 0.7, 4, x + w / 2, y + h * 0.7, w * 0.75);
+    faceGrad.addColorStop(0, '#fff4cc');
+    faceGrad.addColorStop(0.55, '#f7df99');
+    faceGrad.addColorStop(1, '#caa352');
+    ctx.fillStyle = faceGrad;
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 3);
+    ctx.fill();
+
+    // Dark inset bezel
+    ctx.strokeStyle = '#4a341a';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Pivot & Radius
+    const cx = x + w / 2;
+    const cy = y + h + 8;
+    const radius = h * 0.95;
+
+    // Normal scale arc (-20 to 0 dB: dark bronze)
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, -2.35, -1.35);
+    ctx.strokeStyle = '#2b1c0e';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+
+    // Overload scale arc (0 to +3 dB: red)
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, -1.35, -1.05);
+    ctx.strokeStyle = '#d62000';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Calibration tick marks
+    const ticks = [
+      { a: -2.35, text: '-20', major: true },
+      { a: -2.05, text: '-10', major: true },
+      { a: -1.75, text: '-5', major: true },
+      { a: -1.55, text: '-3', major: false },
+      { a: -1.35, text: '0', major: true, red: true },
+      { a: -1.15, text: '+2', major: false, red: true },
+      { a: -1.05, text: '+3', major: true, red: true }
+    ];
+
+    ticks.forEach(t => {
+      const cos = Math.cos(t.a);
+      const sin = Math.sin(t.a);
+      const inner = radius - (t.major ? 6 : 4);
+      ctx.beginPath();
+      ctx.moveTo(cx + inner * cos, cy + inner * sin);
+      ctx.lineTo(cx + radius * cos, cy + radius * sin);
+      ctx.strokeStyle = t.red ? '#d62000' : '#2b1c0e';
+      ctx.lineWidth = t.major ? 1.5 : 1;
+      ctx.stroke();
+
+      if (t.major && w > 75) {
+        ctx.fillStyle = t.red ? '#b31500' : '#3d2814';
+        ctx.font = '7px "Share Tech Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(t.text, cx + (radius - 10) * cos, cy + (radius - 10) * sin);
+      }
+    });
+
+    // VU & Channel label
+    ctx.fillStyle = '#593e22';
+    ctx.font = 'bold 8px "Chakra Petch", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('VU', cx, y + 12);
+    ctx.font = '6px "Share Tech Mono", monospace';
+    ctx.fillText(label, cx, y + 20);
+
+    // Peak LED Indicator
+    ctx.beginPath();
+    ctx.arc(x + w - 8, y + 8, 2.8, 0, Math.PI * 2);
+    if (isPeak) {
+      ctx.fillStyle = '#ff2200';
+      ctx.fill();
+      ctx.shadowColor = '#ff2200';
+      ctx.shadowBlur = 6;
+    } else {
+      ctx.fillStyle = '#4a150f';
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    // Needle drop-shadow
+    ctx.beginPath();
+    ctx.moveTo(cx + 2, cy);
+    const nLen = radius + 2;
+    const nx = cx + nLen * Math.cos(angle);
+    const ny = cy + nLen * Math.sin(angle);
+    ctx.lineTo(nx + 1.5, ny + 1.5);
+    ctx.strokeStyle = 'rgba(60, 35, 10, 0.28)';
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+
+    // Mechanical Needle
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(nx, ny);
+    ctx.strokeStyle = '#1a0e05';
+    ctx.lineWidth = 1.4;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // Red needle tip
+    ctx.beginPath();
+    ctx.moveTo(cx + (nLen - 6) * Math.cos(angle), cy + (nLen - 6) * Math.sin(angle));
+    ctx.lineTo(nx, ny);
+    ctx.strokeStyle = '#d62000';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+
+    // Pivot Dome
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#24170d';
+    ctx.fill();
+    ctx.strokeStyle = '#9e8055';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Glass glare reflection
+    const glareGrad = ctx.createLinearGradient(x, y, x, y + h * 0.45);
+    glareGrad.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
+    glareGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = glareGrad;
+    ctx.beginPath();
+    ctx.roundRect(x + 1, y + 1, w - 2, h * 0.45, [2, 2, 0, 0]);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
   function renderVisualizer() {
     requestAnimationFrame(renderVisualizer);
     if (!analyser) return;
@@ -176,24 +322,62 @@
     const dataArray = new Uint8Array(bufferLength);
     analyser.getByteFrequencyData(dataArray);
 
-    // Draw main waveform in bottom player
+    const skin = document.documentElement.dataset.skin || 'classic';
+
+    // Draw main waveform / VU meter in bottom player
     if (waveformCtx && waveformCanvas) {
       const w = waveformCanvas.width;
       const h = waveformCanvas.height;
       waveformCtx.clearRect(0, 0, w, h);
 
-      const barWidth = (w / bufferLength) * 1.6;
-      let x = 0;
+      if (skin === 'hifi') {
+        // --- Vintage Hi-Fi Dual Analog VU Meter Rendering ---
+        const half = Math.floor(bufferLength / 2);
+        let sumL = 0;
+        for (let i = 0; i < half; i++) sumL += dataArray[i];
+        const nrgL = state.isPlaying ? sumL / (half * 255) : 0;
 
-      for (let i = 0; i < bufferLength; i++) {
-        const barHeight = (dataArray[i] / 255) * h;
-        const grad = waveformCtx.createLinearGradient(0, h, 0, 0);
-        grad.addColorStop(0, vizColors.a);
-        grad.addColorStop(1, vizColors.b);
+        let sumR = 0;
+        for (let i = Math.floor(half / 2); i < bufferLength; i++) sumR += dataArray[i];
+        const nrgR = state.isPlaying ? sumR / ((bufferLength - Math.floor(half / 2)) * 255) : 0;
 
-        waveformCtx.fillStyle = grad;
-        waveformCtx.fillRect(x, h - barHeight, barWidth - 2, barHeight);
-        x += barWidth;
+        const minAngle = -2.35;
+        const maxAngle = -1.05;
+
+        const targetAngleL = minAngle + (maxAngle - minAngle) * Math.min(1, Math.pow(nrgL, 0.75) * 1.4);
+        const targetAngleR = minAngle + (maxAngle - minAngle) * Math.min(1, Math.pow(nrgR, 0.75) * 1.4);
+
+        // Realistic ballistic inertia: fast attack, damped spring decay
+        vuState.needleL += (targetAngleL - vuState.needleL) * (targetAngleL > vuState.needleL ? 0.35 : 0.12);
+        vuState.needleR += (targetAngleR - vuState.needleR) * (targetAngleR > vuState.needleR ? 0.35 : 0.12);
+
+        if (nrgL > 0.82) vuState.peakL = 10;
+        else if (vuState.peakL > 0) vuState.peakL--;
+
+        if (nrgR > 0.82) vuState.peakR = 10;
+        else if (vuState.peakR > 0) vuState.peakR--;
+
+        const gap = 6;
+        const meterW = Math.floor((w - gap - 6) / 2);
+        const meterH = h - 6;
+
+        drawAnalogVuMeter(waveformCtx, 3, 3, meterW, meterH, vuState.needleL, 'CH-LEFT', vuState.peakL > 0);
+        drawAnalogVuMeter(waveformCtx, 3 + meterW + gap, 3, meterW, meterH, vuState.needleR, 'CH-RIGHT', vuState.peakR > 0);
+      } else {
+        // --- Classic & Aurora Waveform Spectrum Bars ---
+        const barWidth = (w / bufferLength) * 1.6;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+          const barHeight = (dataArray[i] / 255) * h;
+          const grad = waveformCtx.createLinearGradient(0, h, 0, 0);
+          grad.addColorStop(0, vizColors.a);
+          grad.addColorStop(1, vizColors.b);
+
+          waveformCtx.fillStyle = grad;
+          waveformCtx.fillRect(x, h - barHeight, barWidth - 2, barHeight);
+          x += barWidth;
+        }
       }
     }
 
@@ -203,11 +387,25 @@
       const mh = miniCanvas.height;
       miniCtx.clearRect(0, 0, mw, mh);
       const avg = dataArray.reduce((acc, v) => acc + v, 0) / bufferLength;
-      const radius = 6 + (avg / 255) * 16;
-      miniCtx.beginPath();
-      miniCtx.arc(mw / 2, mh / 2, radius, 0, Math.PI * 2);
-      miniCtx.fillStyle = `rgba(${vizColors.accentRgb}, ${(avg / 255) * 0.35})`;
-      miniCtx.fill();
+
+      if (skin === 'hifi') {
+        // Warm tube / pilot lamp filament glow
+        const radius = 8 + (avg / 255) * 18;
+        const grad = miniCtx.createRadialGradient(mw / 2, mh / 2, 2, mw / 2, mh / 2, radius);
+        grad.addColorStop(0, 'rgba(255, 220, 130, 0.9)');
+        grad.addColorStop(0.4, 'rgba(255, 140, 20, 0.5)');
+        grad.addColorStop(1, 'rgba(255, 60, 0, 0)');
+        miniCtx.fillStyle = grad;
+        miniCtx.beginPath();
+        miniCtx.arc(mw / 2, mh / 2, radius, 0, Math.PI * 2);
+        miniCtx.fill();
+      } else {
+        const radius = 6 + (avg / 255) * 16;
+        miniCtx.beginPath();
+        miniCtx.arc(mw / 2, mh / 2, radius, 0, Math.PI * 2);
+        miniCtx.fillStyle = `rgba(${vizColors.accentRgb}, ${(avg / 255) * 0.35})`;
+        miniCtx.fill();
+      }
     } else if (miniCtx && miniCanvas) {
       miniCtx.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
     }
@@ -1177,6 +1375,10 @@
       playIcon.style.display = 'block';
       pauseIcon.style.display = 'none';
       btnPlay.classList.remove('playing');
+    }
+
+    if (window.PlayaHifiStack && typeof window.PlayaHifiStack.syncAll === 'function') {
+      window.PlayaHifiStack.syncAll();
     }
   }
 
