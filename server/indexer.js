@@ -280,34 +280,102 @@ export async function scanSpacesBucket(options = {}) {
 
   const albumCoverCache = new Map();
 
-  async function resolveFolderCover(folderDir) {
+  function findBestImageCandidate(folderDir) {
+    if (bestFolderImageMap.has(folderDir)) {
+      return bestFolderImageMap.get(folderDir);
+    }
+    // Subfolders (e.g. Scans, Artwork, sub-album folders)
+    const subCandidates = [];
+    for (const [dir, c] of bestFolderImageMap.entries()) {
+      if (dir.startsWith(folderDir + "/")) subCandidates.push(c);
+    }
+    if (subCandidates.length > 0) {
+      subCandidates.sort((a, b) => b.score - a.score || b.size - a.size);
+      return subCandidates[0];
+    }
+    // Parent and siblings (if parent is not batch root)
+    const parentDir = path.dirname(folderDir);
+    const parentName = path.basename(parentDir);
+    if (parentName && !isDateBatchFolder(parentName) && parentDir !== "." && parentDir !== "/") {
+      if (bestFolderImageMap.has(parentDir)) {
+        return bestFolderImageMap.get(parentDir);
+      }
+      const siblingCandidates = [];
+      for (const [dir, c] of bestFolderImageMap.entries()) {
+        if (dir.startsWith(parentDir + "/")) siblingCandidates.push(c);
+      }
+      if (siblingCandidates.length > 0) {
+        siblingCandidates.sort((a, b) => b.score - a.score || b.size - a.size);
+        return siblingCandidates[0];
+      }
+    }
+    return null;
+  }
+
+  async function resolveFolderCover(folderDir, artist = "", album = "") {
     if (albumCoverCache.has(folderDir)) {
       return albumCoverCache.get(folderDir);
     }
-    const bestImage = bestFolderImageMap.get(folderDir);
-    if (!bestImage) {
-      return null;
-    }
-    try {
-      const imgRes = await client.send(new GetObjectCommand({
-        Bucket: bucket,
-        Key: bestImage.key
-      }));
-      const chunks = [];
-      for await (const chunk of imgRes.Body) chunks.push(chunk);
-      const data = Buffer.concat(chunks);
-      if (data && data.length > 0) {
-        const hash = crypto.createHash("sha1").update(data).digest("hex");
-        const coverPath = path.join(COVERS_DIR, `${hash}.jpg`);
-        if (!fs.existsSync(coverPath)) {
-          fs.writeFileSync(coverPath, data);
+    const bestImage = findBestImageCandidate(folderDir);
+    if (bestImage) {
+      try {
+        const imgRes = await client.send(new GetObjectCommand({
+          Bucket: bucket,
+          Key: bestImage.key
+        }));
+        const chunks = [];
+        for await (const chunk of imgRes.Body) chunks.push(chunk);
+        const data = Buffer.concat(chunks);
+        if (data && data.length > 0) {
+          const hash = crypto.createHash("sha1").update(data).digest("hex");
+          const coverPath = path.join(COVERS_DIR, `${hash}.jpg`);
+          if (!fs.existsSync(coverPath)) {
+            fs.writeFileSync(coverPath, data);
+          }
+          albumCoverCache.set(folderDir, hash);
+          return hash;
         }
-        albumCoverCache.set(folderDir, hash);
-        return hash;
+      } catch (err) {
+        // fallback
       }
-    } catch (err) {
-      // fallback
     }
+
+    // Online fallback if artist & album available
+    if (artist && album && artist !== "Unknown Artist") {
+      try {
+        let artUrl = null;
+        try {
+          const itRes = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist + " " + album)}&entity=album&limit=1`).then(r => r.json());
+          if (itRes.results && itRes.results[0]?.artworkUrl100) {
+            artUrl = itRes.results[0].artworkUrl100.replace("100x100bb", "600x600bb");
+          }
+        } catch (e) {}
+
+        if (!artUrl) {
+          try {
+            const dzRes = await fetch(`https://api.deezer.com/search/album?q=${encodeURIComponent(artist + " " + album)}`).then(r => r.json());
+            if (dzRes.data && dzRes.data[0]?.cover_xl) {
+              artUrl = dzRes.data[0].cover_xl;
+            }
+          } catch (e) {}
+        }
+
+        if (artUrl) {
+          const res = await fetch(artUrl);
+          const data = Buffer.from(await res.arrayBuffer());
+          if (data && data.length > 0) {
+            const hash = crypto.createHash("sha1").update(data).digest("hex");
+            const coverPath = path.join(COVERS_DIR, `${hash}.jpg`);
+            if (!fs.existsSync(coverPath)) {
+              fs.writeFileSync(coverPath, data);
+            }
+            albumCoverCache.set(folderDir, hash);
+            return hash;
+          }
+        }
+      } catch (err) {}
+    }
+
     albumCoverCache.set(folderDir, null);
     return null;
   }
@@ -456,6 +524,9 @@ export async function scanSpacesBucket(options = {}) {
           }
           coverHash = hash;
           albumCoverCache.set(item.dir, hash);
+        }
+        if (!coverHash) {
+          coverHash = await resolveFolderCover(item.dir, artist, album);
         }
 
         // Track duration

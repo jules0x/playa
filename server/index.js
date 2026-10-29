@@ -526,7 +526,7 @@ fastify.get("/api/artists", async (req) => {
 fastify.get("/api/albums", async (req) => {
   const { joinFts, whereClause, params } = buildFilterConditions(req.query, "album");
   const sql = `
-    SELECT tracks.album, tracks.artist, tracks.year, tracks.decade, tracks.genre, tracks.cover_hash,
+    SELECT tracks.album, tracks.artist, tracks.year, tracks.decade, tracks.genre, MAX(tracks.cover_hash) as cover_hash,
            COUNT(*) as track_count, SUM(tracks.duration) as total_duration
     FROM tracks
     ${joinFts}
