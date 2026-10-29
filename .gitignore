@@ -2,7 +2,10 @@ node_modules/
 data/playa.db-wal
 data/playa.db-shm
 data/covers/
+data/local/
 .DS_Store
 
 # Environment variables & secrets
 .env
+.env.*
+
