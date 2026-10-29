@@ -325,7 +325,7 @@ fastify.get("/api/tracks", async (req) => {
     params.decade = decade;
   }
   if (artist) {
-    conditions.push("tracks.artist = @artist");
+    conditions.push("(tracks.artist = @artist OR tracks.album_artist = @artist)");
     params.artist = artist;
   }
   if (album) {
@@ -485,7 +485,7 @@ function buildFilterConditions(query, excludeKey = null) {
     params.decade = query.decade;
   }
   if (query.artist && excludeKey !== "artist") {
-    conditions.push("tracks.artist = @artist");
+    conditions.push("(tracks.artist = @artist OR tracks.album_artist = @artist)");
     params.artist = query.artist;
   }
   if (query.album && excludeKey !== "album") {
@@ -559,12 +559,14 @@ fastify.get("/api/artists", async (req) => {
 fastify.get("/api/albums", async (req) => {
   const { joinFts, whereClause, params } = buildFilterConditions(req.query, "album");
   const sql = `
-    SELECT tracks.album, tracks.artist, tracks.year, tracks.decade, tracks.genre, MAX(tracks.cover_hash) as cover_hash,
+    SELECT tracks.album,
+           COALESCE(NULLIF(tracks.album_artist, ''), tracks.artist) as artist,
+           tracks.year, tracks.decade, tracks.genre, MAX(tracks.cover_hash) as cover_hash,
            COUNT(*) as track_count, SUM(tracks.duration) as total_duration
     FROM tracks
     ${joinFts}
     ${whereClause}
-    GROUP BY tracks.album, tracks.artist
+    GROUP BY tracks.album, COALESCE(NULLIF(tracks.album_artist, ''), tracks.artist)
     ORDER BY tracks.year DESC, tracks.album COLLATE NOCASE ASC
   `;
   return db.prepare(sql).all(params);
