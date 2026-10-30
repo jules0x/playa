@@ -12,9 +12,58 @@
     peakR: 0
   };
 
+  // Playback queue & tracking
+  let loadedTracks = [];
+  let currentTrackId = null;
+
   // EQ Band Frequencies
   const EQ_FREQS = ['32Hz', '64Hz', '125Hz', '250Hz', '500Hz', '1kHz', '2kHz', '4kHz', '8kHz', '16kHz'];
   const eqValues = [2, 4, 3, 0, -2, 1, 3, 5, 4, 2]; // Default Hi-Fi loudness curve
+
+  // Available Atmospheric Listening Room Backdrop Scenes
+  const SCENES = [
+    { id: 'den', name: 'Vinyl Den', file: '/assets/scenes/hifi-den.jpg', label: 'ROOM: DEN' },
+    { id: 'kissa', name: 'Tokyo Kissa', file: '/assets/scenes/hifi-kissa.jpg', label: 'ROOM: KISSA' },
+    { id: 'lounge', name: 'Audiophile Lounge', file: '/assets/scenes/hifi-lounge.jpg', label: 'ROOM: LOUNGE' },
+    { id: 'dark', name: 'Dark Minimal', file: '', label: 'ROOM: DARK' }
+  ];
+
+  function getStoredScene() {
+    return localStorage.getItem('playa-hifi-scene') || 'den';
+  }
+
+  function applyScene(sceneId) {
+    const scene = SCENES.find(s => s.id === sceneId) || SCENES[0];
+    localStorage.setItem('playa-hifi-scene', scene.id);
+
+    const bgEl = $('hifi-scene-bg');
+    if (bgEl) {
+      if (scene.file) {
+        bgEl.style.backgroundImage = `url("${scene.file}")`;
+        bgEl.style.opacity = '1';
+      } else {
+        bgEl.style.backgroundImage = 'none';
+        bgEl.style.opacity = '0';
+      }
+    }
+
+    const btnLabel = $('hifi-scene-btn-label');
+    if (btnLabel) {
+      btnLabel.textContent = scene.label;
+    }
+
+    const container = $('hifi-stack-container');
+    if (container) {
+      container.dataset.scene = scene.id;
+    }
+  }
+
+  function cycleScene() {
+    const cur = getStoredScene();
+    const idx = SCENES.findIndex(s => s.id === cur);
+    const next = SCENES[(idx + 1) % SCENES.length];
+    applyScene(next.id);
+  }
 
   function $(id) { return document.getElementById(id); }
 
@@ -42,7 +91,8 @@
       }
     });
 
-    // Initial sync
+    // Initial sync and restore scene
+    applyScene(getStoredScene());
     syncAll();
   }
 
@@ -128,17 +178,31 @@
       });
     }
 
+    function skipTrack(delta) {
+      const P = window.PlayaPlayer;
+      if (P && P.state.queue.length > 0) {
+        delta > 0 ? P.playNext() : P.playPrev();
+        return;
+      }
+      if (!loadedTracks || loadedTracks.length === 0) return;
+      let idx = loadedTracks.findIndex(t => String(t.id) === String(currentTrackId));
+      idx = idx === -1 ? 0 : (idx + delta + loadedTracks.length) % loadedTracks.length;
+      playTrackDirect(loadedTracks[idx]);
+    }
+
     if (btnRew) {
       btnRew.addEventListener('click', () => {
-        const mainPrev = $('btn-prev');
-        if (mainPrev) mainPrev.click();
+        if (audio && audio.currentTime > 3) {
+          audio.currentTime = 0;
+        } else {
+          skipTrack(-1);
+        }
       });
     }
 
     if (btnFf) {
       btnFf.addEventListener('click', () => {
-        const mainNext = $('btn-next');
-        if (mainNext) mainNext.click();
+        skipTrack(1);
       });
     }
 
@@ -152,6 +216,15 @@
     if (btnEject) btnEject.addEventListener('click', () => toggleCrate(true));
     if (btnCrate) btnCrate.addEventListener('click', () => toggleCrate(true));
     if (btnCrateClose) btnCrateClose.addEventListener('click', () => toggleCrate(false));
+
+    // Listening Room Scene Switcher Button
+    const sceneToggleBtn = $('hifi-scene-toggle-btn');
+    if (sceneToggleBtn) {
+      sceneToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cycleScene();
+      });
+    }
 
     // Skin Picker Button on Hi-Fi Deck: cycles skins smoothly
     const skinToggleBtn = $('hifi-skin-toggle-btn');
@@ -220,6 +293,7 @@
       audio.addEventListener('timeupdate', updatePlaybackMetrics);
       audio.addEventListener('play', () => updatePlayState(true));
       audio.addEventListener('pause', () => updatePlayState(false));
+      // End-of-track advance is handled by the core player queue (app.js)
       audio.addEventListener('ended', () => updatePlayState(false));
     }
   }
@@ -304,6 +378,7 @@
       if (!res.ok) return;
       const data = await res.json();
       let tracks = Array.isArray(data) ? data : (data.tracks || []);
+      loadedTracks = tracks;
 
       if (filter) {
         tracks = tracks.filter(t => 
@@ -354,6 +429,16 @@
   function playTrackDirect(track) {
     const audio = $('native-audio');
     if (!audio) return;
+    currentTrackId = track.id;
+
+    // Prefer the shared player queue so next/prev/shuffle/auto-advance all work
+    const P = window.PlayaPlayer;
+    if (P && loadedTracks.length) {
+      const idx = loadedTracks.findIndex(t => String(t.id) === String(track.id));
+      P.setQueue(loadedTracks, Math.max(0, idx));
+      setTimeout(renderCurrentTracklist, 50);
+      return;
+    }
 
     if ($('player-title')) $('player-title').textContent = track.title;
     if ($('player-artist')) $('player-artist').textContent = `${track.artist || ''} — ${track.album || ''}`;
@@ -712,5 +797,11 @@
     init();
   }
 
-  window.PlayaHifiStack = { init, syncAll };
+  window.PlayaHifiStack = {
+    init,
+    syncAll,
+    applyScene,
+    cycleScene,
+    scenes: SCENES
+  };
 })();

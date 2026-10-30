@@ -10,11 +10,12 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Press+Start+2P&family=Share+Tech+Mono&family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
   <!-- Skins: each file is scoped to html[data-skin="<id>"] -->
   <link rel="stylesheet" href="/skins/aurora.css">
   <link rel="stylesheet" href="/skins/hifi.css">
+  <link rel="stylesheet" href="/skins/cyberdeck.css">
 </head>
 <body>
   <!-- Interactive Ambient Background Glow Canvas -->
@@ -424,6 +425,10 @@
        Active when html[data-skin="hifi"]
        ===================================================================== -->
   <div id="hifi-stack-container" class="hifi-stack-container">
+    <!-- Ambient Listening Room Backdrop Scene & Depth Overlays -->
+    <div class="hifi-scene-bg" id="hifi-scene-bg"></div>
+    <div class="hifi-scene-vignette"></div>
+
     <div class="hifi-tower-shell">
       <!-- Left Oiled Walnut Wooden Side Cheek -->
       <div class="walnut-cheek walnut-cheek-left"></div>
@@ -435,6 +440,9 @@
             <span class="hifi-deck-title">FM STEREO TUNER & PREAMPLIFIER</span>
             <div class="hifi-deck-badge">
               <span class="hifi-model-no">STEREO TUNER ST-700</span>
+              <button class="hifi-scene-btn" id="hifi-scene-toggle-btn" title="Cycle Listening Room Scene (Vinyl Den, Tokyo Kissa, Vinyl Lounge, Dark Studio)">
+                <span id="hifi-scene-btn-label">SCENE</span>
+              </button>
               <button class="hifi-skin-btn" id="hifi-skin-toggle-btn" title="Change Skin">
                 <span>SKIN</span>
               </button>
@@ -678,6 +686,98 @@
     </div>
   </div>
 
+  <!-- =====================================================================
+       CYBERDECK 20XX: 16/32-Bit Lo-Fi Pixel Terminal & Neon Room
+       Active when html[data-skin="cyberdeck"]
+       ===================================================================== -->
+  <div id="cyberdeck-container" class="cyberdeck-scene-viewport">
+    <div class="cyberdeck-stage" id="cyberdeck-stage">
+      <!-- 1. Window Rain Animation Canvas (Strictly confined to window glass x: 75..510, y: 0..612) -->
+      <canvas id="cd-rain-canvas" class="cd-stage-elem cd-rain-canvas"></canvas>
+
+      <!-- 2. Coffee Mug Wavering Steam (Aligned precisely with drawn steam rising from Kowloon mug) -->
+      <canvas id="cd-steam-canvas" class="cd-stage-elem cd-steam-canvas" width="60" height="120"></canvas>
+      <div id="cd-coffee-mug-zone" class="cd-stage-elem cd-trigger cd-mug-trigger" title="Kowloon Coffee (Hot - Click to puff steam)"></div>
+
+      <!-- 3. Active CRT Monitor Screen Glass Area (x: 555..1060, y: 210..438) -->
+      <div class="cd-stage-elem cd-crt-screen-zone" id="cd-crt-screen-zone">
+        <!-- Live Now Playing Phosphor Line directly on the monitor screen -->
+        <div class="cd-crt-title-line" id="cd-crt-title-line">
+          <span class="cd-crt-prefix">NOW PLAYING: </span>
+          <span class="cd-crt-track-text" id="cd-marquee-title">SYSTEM READY // SELECT TRACK FROM VAULT</span>
+        </div>
+
+        <!-- Live Middle Screen Display: Real-Time Spectrum + Live Playlist & Volume Segment Meter -->
+        <div class="cd-crt-screen-content">
+          <!-- Real-Time 16-Bit Rainbow Pixel Spectrum & Oscilloscope -->
+          <div class="cd-crt-viz-bay">
+            <canvas id="cd-viz-canvas" class="cd-crt-viz-canvas" width="220" height="90"></canvas>
+          </div>
+
+          <!-- Live Upcoming Tracks & Live Volume Meter -->
+          <div class="cd-crt-playlist-bay" id="cd-crt-playlist-bay" title="Click to open Vault Drawer">
+            <div class="cd-crt-pl-hdr">PLAYLIST</div>
+            <div class="cd-crt-pl-items" id="cd-crt-pl-items">
+              <div class="cd-crt-pl-item">01: --</div>
+              <div class="cd-crt-pl-item">02: --</div>
+              <div class="cd-crt-pl-item">03: --</div>
+            </div>
+            <div class="cd-crt-vol-meter" id="cd-crt-vol-meter">
+              <span class="cd-crt-vol-lbl">VOLUME:</span>
+              <span class="cd-crt-vol-bars" id="cd-crt-vol-bars">||||||||||||||||</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hotspots directly over the drawn CRT screen buttons: PLAY, PAUSE, STOP, NEXT, PREV, LOOP -->
+        <button class="cd-trigger cd-screen-btn cd-sbtn-play" id="cd-btn-play" title="PLAY (▶)"></button>
+        <button class="cd-trigger cd-screen-btn cd-sbtn-pause" id="cd-btn-pause" title="PAUSE (❚❚)"></button>
+        <button class="cd-trigger cd-screen-btn cd-sbtn-stop" id="cd-btn-stop" title="STOP (■)"></button>
+        <button class="cd-trigger cd-screen-btn cd-sbtn-next" id="cd-btn-next" title="NEXT (▶▶)"></button>
+        <button class="cd-trigger cd-screen-btn cd-sbtn-prev" id="cd-btn-prev" title="PREV (◀◀)"></button>
+        <button class="cd-trigger cd-screen-btn cd-sbtn-loop" id="cd-btn-loop" title="LOOP (🔁)"></button>
+      </div>
+
+      <!-- 4. Cassette Deck Trigger (Clicking plays/pauses) -->
+      <div class="cd-stage-elem cd-trigger cd-cassette-trigger" id="cd-cassette-trigger" title="Cassette Deck: Click to Play / Pause"></div>
+
+      <!-- 5. Hardware POWER Switch Trigger on Deck -->
+      <button class="cd-stage-elem cd-trigger cd-power-trigger" id="cd-btn-power" title="POWER: Toggle Play / Standby">
+        <span class="cd-power-pip" id="cd-power-pip"></span>
+      </button>
+
+      <!-- 6. Hardware Rotary VOLUME Knob on front panel -->
+      <div class="cd-stage-elem cd-trigger cd-knob-trigger cd-knob-vol" id="cd-dial-vol" data-param="vol" title="VOLUME: Drag Up/Down or Scroll to Adjust">
+        <div class="cd-knob-hud" id="cd-hud-vol">VOL: 85%</div>
+      </div>
+
+      <!-- 7. Quick Vault Terminal Toggle Tab -->
+      <button class="cd-stage-elem cd-trigger cd-vault-toggle-tab" id="cd-btn-vault-toggle" title="Open Vault Tracklist">
+        📂 VAULT
+      </button>
+
+      <!-- 8. Discreet Pixel Theme Switcher Button -->
+      <button class="cd-stage-elem cd-trigger cd-skin-switch-btn" id="cd-btn-skin" title="Switch Playa Theme">
+        💾 SKIN
+      </button>
+
+      <!-- 9. Slide-Out Cyberpunk Vault Terminal Drawer -->
+      <div class="cd-vault-drawer" id="cd-vault-drawer">
+        <div class="cd-vault-drawer-hdr">
+          <span class="cd-vd-title">CYBER TERMINAL // VAULT TRACKS</span>
+          <button class="cd-vd-close" id="cd-vault-close-btn" title="Close Drawer">✕</button>
+        </div>
+        <div class="cd-vault-drawer-meta">
+          <span>NOW PLAYING: <b id="cd-drawer-now-playing">NOTHING</b></span>
+          <span id="cd-drawer-count">00 TRACKS</span>
+        </div>
+        <div class="cd-vault-tracklist" id="cd-playlist-scroll">
+          <!-- Populated from vault tracks -->
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Persistent Bottom Player Bar (Used in Classic & Aurora) -->
   <footer class="player-bar">
     <div class="player-track-info">
@@ -756,5 +856,6 @@
   <script src="/glow.js"></script>
   <script src="/app.js?v=1793236000000"></script>
   <script src="/hifi-stack.js"></script>
+  <script src="/cyberdeck.js"></script>
 </body>
 </html>

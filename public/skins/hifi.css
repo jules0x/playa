@@ -34,10 +34,7 @@ html[data-skin="hifi"] #hifi-stack-container {
 }
 
 html[data-skin="hifi"] body {
-  background: 
-    radial-gradient(ellipse at 50% 25%, rgba(255, 184, 52, 0.08) 0%, transparent 65%),
-    radial-gradient(ellipse at 80% 80%, rgba(0, 229, 255, 0.04) 0%, transparent 50%),
-    linear-gradient(180deg, #18100a 0%, #0d0805 100%);
+  background: #0d0805;
   color: #f7ecd5;
   font-family: var(--font-main);
   height: 100vh;
@@ -47,7 +44,7 @@ html[data-skin="hifi"] body {
 }
 
 /* ==========================================================================
-   Outer Shell: Centered Luxury Walnut Cabinet Enclosure
+   Outer Shell: Atmospheric Listening Room Scene & Luxury Walnut Tower
    ========================================================================== */
 
 .hifi-stack-container {
@@ -56,8 +53,34 @@ html[data-skin="hifi"] body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 30px 20px;
+  padding: 40px 20px;
   box-sizing: border-box;
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Photo-realistic Room Backdrop Layer */
+.hifi-scene-bg {
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  z-index: 0;
+  transition: opacity 0.5s ease, filter 0.5s ease;
+  filter: brightness(0.88) contrast(1.08) saturate(1.06);
+}
+
+/* Atmospheric Vignette & Depth Dimmer */
+.hifi-scene-vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: 
+    radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.45) 62%, rgba(0, 0, 0, 0.9) 100%),
+    linear-gradient(to bottom, rgba(12, 8, 4, 0.45) 0%, transparent 22%, transparent 72%, rgba(10, 6, 3, 0.85) 100%);
 }
 
 .hifi-tower-shell {
@@ -65,10 +88,40 @@ html[data-skin="hifi"] body {
   max-width: 1020px;
   position: relative;
   display: flex;
+  z-index: 5;
   box-shadow: 
-    0 28px 70px rgba(0, 0, 0, 0.95),
-    0 4px 16px rgba(0, 0, 0, 0.8);
+    0 38px 90px rgba(0, 0, 0, 0.98),
+    0 14px 32px rgba(0, 0, 0, 0.88),
+    0 2px 6px rgba(0, 0, 0, 0.92);
   border-radius: 4px;
+}
+
+/* Realistic Tabletop Contact Shadow on Credenza Surface */
+.hifi-tower-shell::after {
+  content: '';
+  position: absolute;
+  bottom: -26px;
+  left: 20px;
+  right: 20px;
+  height: 42px;
+  background: radial-gradient(ellipse at 50% 30%, rgba(0, 0, 0, 0.98) 0%, rgba(0, 0, 0, 0.65) 45%, transparent 75%);
+  filter: blur(12px);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Warm Ambient Glow Reflecting Downward onto Credenza Wood */
+.hifi-tower-shell::before {
+  content: '';
+  position: absolute;
+  bottom: -36px;
+  left: 8%;
+  right: 8%;
+  height: 36px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 184, 52, 0.26) 0%, rgba(255, 120, 20, 0.08) 50%, transparent 80%);
+  filter: blur(14px);
+  z-index: -1;
+  pointer-events: none;
 }
 
 /* Oiled American Walnut Side Cheeks */
@@ -188,7 +241,8 @@ html[data-skin="hifi"] body {
   font-weight: 600;
 }
 
-.hifi-skin-btn {
+.hifi-skin-btn,
+.hifi-scene-btn {
   background: linear-gradient(180deg, #f2edd9 0%, #d4caa8 100%);
   border: 1px solid #6b5d44;
   border-top-color: #fff;
@@ -196,12 +250,24 @@ html[data-skin="hifi"] body {
   padding: 2px 8px;
   font-family: var(--font-mono);
   font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   color: #1a1207;
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 #fff;
+  transition: all 0.15s ease;
+  user-select: none;
 }
-.hifi-skin-btn:hover {
+.hifi-skin-btn:hover,
+.hifi-scene-btn:hover {
   background: #fff;
+  color: #000;
+  border-color: #3b2c1a;
+}
+.hifi-scene-btn:active,
+.hifi-skin-btn:active {
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+  transform: translateY(1px);
 }
 
 /* ==========================================================================

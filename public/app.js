@@ -1755,6 +1755,21 @@
     updateQueueDrawer();
   }
 
+  // Public player API used by full-scene skins (Hi-Fi stack, Cyberdeck)
+  window.PlayaPlayer = {
+    setQueue,
+    playTrack,
+    playNext,
+    playPrev,
+    togglePlay,
+    get state() { return state; },
+    get analyser() { return analyser; },
+    ensureAudio() {
+      initAudioContext();
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+    }
+  };
+
   function getTrackAudioFormat(track) {
     if (!track) return '';
     const fp = (track.filepath || '').toLowerCase();
@@ -1793,6 +1808,7 @@
     if (window.PlayaHifiStack && typeof window.PlayaHifiStack.syncAll === 'function') {
       window.PlayaHifiStack.syncAll();
     }
+    window.dispatchEvent(new CustomEvent('playa:playerupdate'));
   }
 
   function highlightActiveTrack() {
