@@ -141,26 +141,15 @@ html[data-skin="cyberdeck"] body {
 }
 
 /* ==========================================================================
-   3. Active CRT Monitor Screen Glass Area & Live Music-Reactive Display
+   3. Active CRT Monitor Screen Elements & Live Music-Reactive Display
    ========================================================================== */
-.cd-crt-screen-zone {
-  left: 40.3%;
-  top: 27.3%;
-  width: 36.7%;
-  height: 29.7%;
-  z-index: 5;
-  pointer-events: auto;
-  transform: rotate(-1.2deg) skewX(-1.5deg);
-  transform-origin: top left;
-}
 
-/* Live Now Playing Banner (Covers static NOW PLAYING header) */
+/* Live Now Playing Title Banner (x: 584..1038, y: 238..258) */
 .cd-crt-title-line {
-  position: absolute;
-  top: 10.5%;
-  left: 3.5%;
-  right: 3.5%;
-  height: 18px;
+  left: 42.44%;
+  top: 30.99%;
+  width: 32.99%;
+  height: 2.60%;
   background: #080414;
   display: flex;
   align-items: center;
@@ -181,32 +170,23 @@ html[data-skin="cyberdeck"] body {
 .cd-crt-prefix {
   color: #38bdf8;
   font-weight: bold;
-  margin-right: 4px;
+  margin-right: 5px;
 }
 
 .cd-crt-track-text {
   color: #fde047;
 }
 
-/* Middle Screen Content Area: Live Spectrum + Live Playlist */
-.cd-crt-screen-content {
-  position: absolute;
-  top: 20%;
-  left: 3.5%;
-  right: 3.5%;
-  bottom: 23%;
-  display: flex;
-  gap: 4px;
-  z-index: 6;
-}
-
-/* Live 16-Bit Rainbow Spectrum Analyzer */
+/* Live 16-Bit Rainbow Spectrum Analyzer (x: 581..842, y: 258..384) */
 .cd-crt-viz-bay {
-  flex: 1.15;
+  left: 42.22%;
+  top: 33.60%;
+  width: 18.97%;
+  height: 16.41%;
   background: #080414;
-  position: relative;
   overflow: hidden;
   border-radius: 1px;
+  z-index: 6;
 }
 
 .cd-crt-viz-canvas {
@@ -215,55 +195,63 @@ html[data-skin="cyberdeck"] body {
   display: block;
 }
 
-/* Live Upcoming Playlist & Live Volume Bar (Covers static playlist) */
+/* Live Upcoming Playlist & Live Volume Bar (x: 844..1038, y: 258..384) */
 .cd-crt-playlist-bay {
-  flex: 0.85;
+  left: 61.34%;
+  top: 33.60%;
+  width: 14.10%;
+  height: 16.41%;
   background: #080414;
-  padding: 2px 5px;
+  padding: 3px 6px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   cursor: pointer;
   border-radius: 1px;
   overflow: hidden;
+  z-index: 6;
 }
 
 .cd-crt-pl-hdr {
   font-family: var(--font-pixel);
-  font-size: 7px;
+  font-size: 8px;
   color: #38bdf8;
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid rgba(56, 189, 248, 0.3);
-  padding-bottom: 1px;
+  letter-spacing: 0.8px;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.4);
+  padding-bottom: 2px;
 }
 
 .cd-crt-pl-items {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  margin-top: 1px;
+  justify-content: space-around;
+  flex: 1;
+  margin: 1px 0;
+  overflow: hidden;
 }
 
 .cd-crt-pl-item {
   font-family: var(--font-terminal);
-  font-size: 12px;
+  font-size: 12.5px;
   color: #c4b5fd;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.1;
+  cursor: pointer;
 }
 
 .cd-crt-pl-item:hover {
   color: #38bdf8;
+  text-shadow: 0 0 6px #38bdf8;
 }
 
 .cd-crt-vol-meter {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   font-family: var(--font-pixel);
-  font-size: 6px;
+  font-size: 7px;
   color: #a78bfa;
   margin-top: 2px;
   white-space: nowrap;
@@ -271,27 +259,27 @@ html[data-skin="cyberdeck"] body {
 
 .cd-crt-vol-bars {
   font-family: var(--font-mono);
-  font-size: 8px;
-  letter-spacing: -1px;
+  font-size: 9px;
+  letter-spacing: -0.5px;
   color: #06b6d4;
   text-shadow: 0 0 4px #06b6d4;
 }
 
-/* On-Screen CRT Buttons (PLAY, PAUSE, STOP, NEXT, PREV, LOOP) */
+/* On-Screen CRT Buttons (PLAY, PAUSE, STOP, NEXT, PREV, LOOP) (y: 405..433) */
 .cd-screen-btn {
-  position: absolute;
-  bottom: 2%;
-  height: 17%;
+  top: 52.73%;
+  height: 3.65%;
   border-radius: 2px;
   z-index: 8;
+  cursor: pointer;
 }
 
-.cd-sbtn-play  { left: 36.8%; width: 9.8%; }
-.cd-sbtn-pause { left: 47.0%; width: 9.8%; }
-.cd-sbtn-stop  { left: 57.2%; width: 9.8%; }
-.cd-sbtn-next  { left: 67.4%; width: 9.8%; }
-.cd-sbtn-prev  { left: 77.6%; width: 9.8%; }
-.cd-sbtn-loop  { left: 87.8%; width: 10.5%; }
+.cd-sbtn-play  { left: 54.80%; width: 2.62%; }
+.cd-sbtn-pause { left: 58.28%; width: 2.62%; }
+.cd-sbtn-stop  { left: 61.77%; width: 2.83%; }
+.cd-sbtn-next  { left: 65.26%; width: 2.62%; }
+.cd-sbtn-prev  { left: 68.82%; width: 2.62%; }
+.cd-sbtn-loop  { left: 72.31%; width: 2.91%; }
 
 .cd-screen-btn:hover {
   outline: 1px solid #facc15 !important;
@@ -426,9 +414,9 @@ html[data-skin="cyberdeck"] body {
   top: 0;
   right: 0;
   bottom: 0;
-  width: 350px;
-  max-width: 85vw;
-  background: rgba(9, 5, 16, 0.95);
+  width: 460px;
+  max-width: 90vw;
+  background: rgba(9, 5, 16, 0.96);
   border-left: 2px solid #7c3aed;
   box-shadow: -10px 0 35px rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(8px);
@@ -447,16 +435,48 @@ html[data-skin="cyberdeck"] body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
-  background: rgba(124, 58, 237, 0.2);
-  border-bottom: 1px solid rgba(124, 58, 237, 0.4);
+  padding: 12px 16px;
+  background: rgba(124, 58, 237, 0.22);
+  border-bottom: 1px solid rgba(124, 58, 237, 0.45);
+  gap: 12px;
 }
 
 .cd-vd-title {
   font-family: var(--font-pixel);
-  font-size: 8px;
+  font-size: 10px;
   color: #38bdf8;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+}
+
+.cd-vault-tabs {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.cd-vtab {
+  background: rgba(17, 9, 30, 0.7);
+  border: 1px solid rgba(124, 58, 237, 0.5);
+  color: #c4b5fd;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  padding: 4px 10px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cd-vtab:hover {
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+.cd-vtab.active {
+  background: #7c3aed;
+  color: #ffffff;
+  border-color: #a855f7;
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
 }
 
 .cd-vd-close {
@@ -464,8 +484,8 @@ html[data-skin="cyberdeck"] body {
   border: 1px solid rgba(124, 58, 237, 0.4);
   color: #e9d5ff;
   font-family: var(--font-pixel);
-  font-size: 10px;
-  padding: 2px 6px;
+  font-size: 11px;
+  padding: 3px 8px;
   cursor: pointer;
   border-radius: 2px;
 }
@@ -478,57 +498,66 @@ html[data-skin="cyberdeck"] body {
 .cd-vault-drawer-meta {
   display: flex;
   justify-content: space-between;
-  padding: 6px 14px;
-  background: rgba(0, 0, 0, 0.4);
+  align-items: center;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.5);
   font-family: var(--font-terminal);
-  font-size: 13px;
+  font-size: 16px;
   color: #a78bfa;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cd-vault-drawer-meta b {
+  color: #fde047;
 }
 
 .cd-vault-tracklist {
   flex: 1;
   overflow-y: auto;
-  padding: 6px;
+  padding: 8px 10px;
 }
 
 .cd-vault-tracklist::-webkit-scrollbar {
-  width: 5px;
+  width: 6px;
 }
 .cd-vault-tracklist::-webkit-scrollbar-thumb {
   background: #7c3aed;
   border-radius: 2px;
 }
 
+/* Track Row */
 .cd-track-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-family: var(--font-terminal);
-  font-size: 14px;
+  font-size: 17px;
   color: #c4b5fd;
-  padding: 4px 8px;
-  margin-bottom: 2px;
-  border-radius: 2px;
+  padding: 6px 10px;
+  margin-bottom: 3px;
+  border-radius: 3px;
   cursor: pointer;
-  transition: background 0.1s ease;
+  transition: all 0.1s ease;
 }
 
 .cd-track-row:hover {
-  background: rgba(124, 58, 237, 0.3);
+  background: rgba(124, 58, 237, 0.35);
   color: #38bdf8;
+  transform: translateX(3px);
 }
 
 .cd-track-row.active {
   background: rgba(34, 197, 94, 0.25);
   color: #4ade80;
   border-left: 3px solid #22c55e;
+  text-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
 }
 
 .cd-track-num {
-  font-size: 11px;
-  opacity: 0.6;
-  margin-right: 6px;
+  font-size: 14px;
+  opacity: 0.75;
+  margin-right: 10px;
+  font-weight: bold;
 }
 
 .cd-track-name {
@@ -539,7 +568,67 @@ html[data-skin="cyberdeck"] body {
 }
 
 .cd-track-dur {
-  font-size: 12px;
-  opacity: 0.7;
-  margin-left: 8px;
+  font-size: 14px;
+  opacity: 0.75;
+  margin-left: 10px;
+}
+
+/* Album Row */
+.cd-album-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  margin-bottom: 5px;
+  background: rgba(17, 9, 30, 0.55);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cd-album-row:hover {
+  background: rgba(124, 58, 237, 0.35);
+  border-color: #38bdf8;
+  transform: translateX(3px);
+}
+
+.cd-album-thumb {
+  width: 44px;
+  height: 44px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 2px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  flex-shrink: 0;
+  background-color: #080414;
+}
+
+.cd-album-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cd-album-title {
+  font-family: var(--font-terminal);
+  font-size: 18px;
+  color: #fde047;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+  text-shadow: 0 0 6px rgba(253, 224, 71, 0.4);
+}
+
+.cd-album-meta {
+  font-family: var(--font-terminal);
+  font-size: 14px;
+  color: #c4b5fd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
 }
