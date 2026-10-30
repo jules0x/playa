@@ -33,6 +33,7 @@
     if (audio) {
       audio.addEventListener('play', syncAll);
       audio.addEventListener('pause', syncAll);
+      audio.addEventListener('ended', syncAll);
       audio.addEventListener('volumechange', () => {
         updateScreenVolumeMeter();
       });
@@ -109,42 +110,77 @@
   }
 
   // --------------------------------------------------------------------------
-  // CRT Screen Live Mini-Playlist (6 Slots)
+  // CRT Screen Live Mini-Playlist (6 Slots: Current Track + Upcoming Tracks)
   // --------------------------------------------------------------------------
   function updateScreenPlaylist() {
     const container = $('cd-crt-pl-items');
     if (!container) return;
 
     const P = window.PlayaPlayer;
-    const queue = (P && P.state.queue && P.state.queue.length > 0) ? P.state.queue : loadedTracks;
-    const curIdx = P ? P.state.queueIndex : 0;
+    const queue = (P && P.state.queue && P.state.queue.length > 0)
+      ? P.state.queue
+      : (loadedTracks.length > 0 ? loadedTracks : []);
+
+    const curTrack = P ? P.state.currentTrack : null;
+    let curIdx = 0;
+    if (curTrack && queue.length > 0) {
+      const found = queue.findIndex(t => String(t.id) === String(curTrack.id));
+      if (found !== -1) curIdx = found;
+      else if (P && typeof P.state.queueIndex === 'number') curIdx = P.state.queueIndex;
+    } else if (P && typeof P.state.queueIndex === 'number') {
+      curIdx = P.state.queueIndex;
+    }
 
     let itemsHtml = '';
-    for (let slot = 0; slot < 6; slot++) {
-      const trackIdx = (curIdx + 1 + slot) % (queue.length || 1);
-      const t = queue && queue[trackIdx] ? queue[trackIdx] : (loadedTracks[slot] || null);
-      if (t) {
-        itemsHtml += `<div class="cd-crt-pl-item" data-id="${t.id}" data-idx="${trackIdx}" title="${escapeHtml(t.artist)} - ${escapeHtml(t.title)}">0${slot + 1}: ${escapeHtml(t.title)}</div>`;
-      } else {
+    const numSlots = 6;
+    for (let slot = 0; slot < numSlots; slot++) {
+      if (queue.length === 0) {
         itemsHtml += `<div class="cd-crt-pl-item">0${slot + 1}: --</div>`;
+        continue;
+      }
+
+      // Slot 0 is what is playing right now
+      if (slot === 0) {
+        const t = queue[curIdx] || curTrack || queue[0];
+        itemsHtml += `
+          <div class="cd-crt-pl-item now-playing" data-id="${t.id}" data-idx="${curIdx}" title="NOW PLAYING: ${escapeHtml(t.artist)} - ${escapeHtml(t.title)}">
+            ▶ 01: ${escapeHtml(t.title)}
+          </div>
+        `;
+      } else {
+        // Slots 1..5 are upcoming tracks
+        const nextIdx = curIdx + slot;
+        if (nextIdx < queue.length) {
+          const t = queue[nextIdx];
+          itemsHtml += `
+            <div class="cd-crt-pl-item" data-id="${t.id}" data-idx="${nextIdx}" title="UPCOMING: ${escapeHtml(t.artist)} - ${escapeHtml(t.title)}">
+              0${slot + 1}: ${escapeHtml(t.title)}
+            </div>
+          `;
+        } else if (queue.length > numSlots) {
+          // Wrapped upcoming tracks
+          const wrapIdx = nextIdx % queue.length;
+          const t = queue[wrapIdx];
+          itemsHtml += `
+            <div class="cd-crt-pl-item" data-id="${t.id}" data-idx="${wrapIdx}" title="UPCOMING: ${escapeHtml(t.artist)} - ${escapeHtml(t.title)}">
+              0${slot + 1}: ${escapeHtml(t.title)}
+            </div>
+          `;
+        } else {
+          // Empty slot for albums shorter than 6 tracks
+          itemsHtml += `<div class="cd-crt-pl-item">0${slot + 1}: --</div>`;
+        }
       }
     }
     container.innerHTML = itemsHtml;
 
-    container.querySelectorAll('.cd-crt-pl-item').forEach(el => {
+    container.querySelectorAll('.cd-crt-pl-item[data-idx]').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
-        const id = el.dataset.id;
+        const idx = parseInt(el.dataset.idx, 10);
         const P = window.PlayaPlayer;
-        if (id && P) {
-          const currentQ = P.state.queue;
-          const qIdx = currentQ.findIndex(tr => String(tr.id) === String(id));
-          if (qIdx !== -1) {
-            P.setQueue(currentQ, qIdx);
-          } else {
-            const lIdx = loadedTracks.findIndex(tr => String(tr.id) === String(id));
-            if (lIdx !== -1) P.setQueue(loadedTracks, lIdx);
-          }
+        if (P && !isNaN(idx) && queue[idx]) {
+          P.setQueue(queue, idx);
         }
       });
     });

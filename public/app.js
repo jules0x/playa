@@ -1009,6 +1009,7 @@
       const span = albShuffleBtn.querySelector('span');
       if (span) span.textContent = shouldBeActive ? 'Shuffle: ON' : 'Shuffle';
     });
+    window.dispatchEvent(new CustomEvent('playa:playerupdate'));
   }
 
   // Reusable Album Row Card Component (Cover on left, track sub-rows on right)

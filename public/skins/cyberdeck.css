@@ -97,8 +97,7 @@ html[data-skin="cyberdeck"] body {
 }
 
 .cd-trigger:hover {
-  outline: 1px dashed rgba(6, 182, 212, 0.6);
-  background: rgba(6, 182, 212, 0.08);
+  cursor: pointer;
 }
 
 .cd-trigger:active {
@@ -246,6 +245,17 @@ html[data-skin="cyberdeck"] body {
   text-shadow: 0 0 6px #38bdf8;
 }
 
+.cd-crt-pl-item.now-playing {
+  color: #fde047;
+  font-weight: bold;
+  text-shadow: 0 0 6px rgba(250, 204, 21, 0.6);
+}
+
+.cd-crt-pl-item.now-playing:hover {
+  color: #fef08a;
+  text-shadow: 0 0 8px #facc15;
+}
+
 .cd-crt-vol-meter {
   display: flex;
   align-items: center;
@@ -282,8 +292,7 @@ html[data-skin="cyberdeck"] body {
 .cd-sbtn-loop  { left: 72.31%; width: 2.91%; }
 
 .cd-screen-btn:hover {
-  outline: 1px solid #facc15 !important;
-  background: rgba(250, 204, 21, 0.25) !important;
+  cursor: pointer;
 }
 
 .cd-sbtn-loop.active {
