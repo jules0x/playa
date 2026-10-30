@@ -461,13 +461,28 @@
       });
     }
 
-    // 5. Vault Toggle Tab, Tabs & Close Button
+    // 5. Vault Toggle Tab, Tabs, Close Button & Click-Away
     const vaultTab = $('cd-btn-vault-toggle');
     if (vaultTab) {
-      vaultTab.addEventListener('click', () => {
-        setDrawerOpen(true);
+      vaultTab.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const drawer = $('cd-vault-drawer');
+        const isOpen = drawer && drawer.classList.contains('open');
+        setDrawerOpen(!isOpen);
       });
     }
+
+    // Click-away outside the vault drawer slideover to close it
+    document.addEventListener('click', (e) => {
+      if (getActiveSkin() !== 'cyberdeck') return;
+      const drawer = $('cd-vault-drawer');
+      if (!drawer || !drawer.classList.contains('open')) return;
+
+      if (drawer.contains(e.target)) return;
+      if (e.target.closest('#cd-btn-vault-toggle') || e.target.closest('#cd-crt-playlist-bay')) return;
+
+      setDrawerOpen(false);
+    });
 
     const tabTracks = $('cd-vtab-tracks');
     const tabAlbums = $('cd-vtab-albums');
@@ -496,7 +511,8 @@
 
     const closeBtn = $('cd-vault-close-btn');
     if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         setDrawerOpen(false);
       });
     }

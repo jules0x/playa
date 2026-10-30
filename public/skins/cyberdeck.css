@@ -287,9 +287,9 @@ html[data-skin="cyberdeck"] body {
 .cd-sbtn-play  { left: 54.80%; width: 2.62%; }
 .cd-sbtn-pause { left: 58.28%; width: 2.62%; }
 .cd-sbtn-stop  { left: 61.77%; width: 2.83%; }
-.cd-sbtn-next  { left: 65.26%; width: 2.62%; }
+.cd-sbtn-loop  { left: 65.26%; width: 2.62%; }
 .cd-sbtn-prev  { left: 68.82%; width: 2.62%; }
-.cd-sbtn-loop  { left: 72.31%; width: 2.91%; }
+.cd-sbtn-next  { left: 72.31%; width: 2.91%; }
 
 .cd-screen-btn:hover {
   cursor: pointer;
@@ -376,7 +376,7 @@ html[data-skin="cyberdeck"] body {
    7. Quick Vault Terminal Tab & Theme Switcher
    ========================================================================== */
 .cd-vault-toggle-tab {
-  left: 1.5%;
+  right: 1.5%;
   top: 1.8%;
   z-index: 15;
   background: rgba(17, 9, 30, 0.7);
@@ -396,7 +396,7 @@ html[data-skin="cyberdeck"] body {
 }
 
 .cd-skin-switch-btn {
-  right: 1.5%;
+  left: 1.5%;
   top: 1.8%;
   z-index: 15;
   background: rgba(17, 9, 30, 0.7);
