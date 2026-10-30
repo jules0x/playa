@@ -36,6 +36,9 @@
           <h1>Playa</h1>
           <span class="badge-vault">VAULT // PRIVATE</span>
         </div>
+        <button class="sidebar-mobile-close-btn" id="sidebar-mobile-close" aria-label="Close Controls" title="Close Controls">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
 
       <div class="sidebar-section collapsible" data-section="views">
@@ -130,10 +133,20 @@
       </div>
     </aside>
 
+    <!-- Mobile Backdrop for Floating Controls Drawer -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
     <!-- Main Content Area -->
     <main class="main-content">
-      <!-- Top Bar: Search, Active Filters, Stats -->
+      <!-- Top Bar: Mobile Menu Button, Search, Active Filters, Stats -->
       <header class="top-bar">
+        <button class="mobile-menu-btn" id="btn-mobile-menu" aria-label="Open Controls" aria-expanded="false" title="Open Controls">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
         <div class="search-box">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           <input type="text" id="search-input" placeholder="Search artists, tracks, underground albums, genres..." autocomplete="off">

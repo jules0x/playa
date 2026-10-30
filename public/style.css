@@ -148,6 +148,29 @@ body {
   align-items: center;
   gap: 12px;
   padding-bottom: 8px;
+  position: relative;
+}
+
+.sidebar-mobile-close-btn {
+  display: none;
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.sidebar-mobile-close-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+  border-color: var(--border-accent);
 }
 
 .brand-logo {
@@ -433,6 +456,31 @@ body {
   background: rgba(16, 20, 29, 0.6);
   backdrop-filter: blur(14px);
   z-index: 10;
+}
+
+.mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.mobile-menu-btn:hover {
+  background: rgba(var(--accent-rgb), 0.15);
+  border-color: var(--border-accent);
+  color: var(--accent-cyan);
+}
+
+.sidebar-backdrop {
+  display: none;
 }
 
 .search-box {
@@ -2718,4 +2766,369 @@ body {
   0% { opacity: 0.5; transform: scale(0.9); }
   100% { opacity: 1; transform: scale(1.15); }
 }
+
+/* ==========================================================================
+   Mobile Responsive Layout & Collapsible Controls Drawer
+   ========================================================================== */
+@media (max-width: 768px) {
+  :root {
+    --player-height: 98px;
+    --header-height: 58px;
+  }
+
+  /* 1. Mobile Menu Button & Backdrop */
+  .mobile-menu-btn {
+    display: inline-flex;
+  }
+
+  .sidebar-mobile-close-btn {
+    display: inline-flex;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(4, 6, 12, 0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .sidebar-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* 2. Collapsible Floating Controls Pane (Sidebar) */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(320px, 86vw);
+    height: 100vh;
+    height: 100dvh;
+    z-index: 1000;
+    background: rgba(12, 15, 24, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-right: 1px solid rgba(var(--accent-rgb), 0.25);
+    border-radius: 0 20px 20px 0;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.85);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 18px 16px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* 3. Main App Layout & Display Area */
+  .app-layout {
+    width: 100vw;
+    height: calc(100vh - var(--player-height));
+    height: calc(100dvh - var(--player-height));
+    overflow: hidden;
+  }
+
+  .main-content {
+    width: 100vw;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .top-bar {
+    height: var(--header-height);
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .search-box {
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .search-box input {
+    font-size: 0.82rem;
+  }
+
+  .filter-pills {
+    display: none;
+  }
+
+  .header-actions {
+    gap: 6px;
+  }
+
+  .icon-action-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .content-body {
+    padding: 14px 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 4. Responsive View Headers & Controls */
+  .view-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .view-title {
+    font-size: 1.35rem;
+  }
+
+  .view-header-controls,
+  .view-header-actions {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .view-sort-control {
+    flex: 1 1 auto;
+    min-width: 130px;
+  }
+
+  .view-select {
+    width: 100%;
+    font-size: 0.8rem;
+    padding: 6px 10px;
+  }
+
+  .grid-layout-control {
+    display: none !important;
+  }
+
+  .btn-tracks-shuffle {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    flex: 0 0 auto;
+  }
+
+  /* 5. Responsive Albums & Artists Grids */
+  .albums-grid,
+  .artists-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  .album-card {
+    padding: 9px;
+  }
+
+  .album-card-title {
+    font-size: 0.88rem;
+    margin-top: 6px;
+  }
+
+  .album-card-artist {
+    font-size: 0.76rem;
+  }
+
+  .artist-card {
+    padding: 12px 8px;
+  }
+
+  .artist-avatar {
+    width: 68px;
+    height: 68px;
+    margin-bottom: 8px;
+  }
+
+  .artist-name {
+    font-size: 0.88rem;
+  }
+
+  /* 6. Responsive Tracks Table */
+  .tracks-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tracks-table {
+    min-width: 0;
+  }
+
+  .tracks-table th.th-album,
+  .tracks-table td:nth-child(4),
+  .tracks-table th.th-genre,
+  .tracks-table td:nth-child(5),
+  .tracks-table th.th-decade,
+  .tracks-table td:nth-child(6) {
+    display: none !important;
+  }
+
+  .tracks-table th,
+  .tracks-table td {
+    padding: 9px 8px;
+  }
+
+  .track-num-cell {
+    width: 28px;
+    padding-left: 6px;
+    font-size: 0.74rem;
+  }
+
+  .track-title-cell {
+    gap: 8px;
+    font-size: 0.84rem;
+  }
+
+  .track-thumb {
+    width: 28px;
+    height: 28px;
+  }
+
+  .track-duration-cell {
+    width: 48px;
+    padding-right: 6px;
+    font-size: 0.74rem;
+  }
+
+  .th-actions {
+    width: 32px;
+    padding: 6px;
+  }
+
+  .btn-add-track-playlist {
+    width: 26px;
+    height: 26px;
+    font-size: 0.8rem;
+  }
+
+  /* 7. Responsive Artist Detail & Album Detail */
+  .album-row-card {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .album-row-aside {
+    gap: 12px;
+  }
+
+  .album-row-cover-wrap {
+    width: 80px;
+    height: 80px;
+  }
+
+  .album-row-title {
+    font-size: 1rem;
+  }
+
+  .subtrack-row {
+    padding: 8px 6px;
+    font-size: 0.84rem;
+  }
+
+  .playlist-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 12px;
+  }
+
+  .playlist-header-cover {
+    width: 90px;
+    height: 90px;
+  }
+
+  /* 8. Responsive Player Bar */
+  .player-bar {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: var(--player-height);
+    padding: 8px 12px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    gap: 6px;
+    grid-template-columns: none;
+  }
+
+  .player-track-info {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .player-cover-box {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+  }
+
+  .player-title {
+    font-size: 0.84rem;
+  }
+
+  .player-artist {
+    font-size: 0.72rem;
+  }
+
+  .player-center {
+    width: 100%;
+    gap: 4px;
+  }
+
+  .player-controls {
+    gap: 14px;
+  }
+
+  .btn-ctrl {
+    padding: 4px;
+  }
+
+  .play-main-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .progress-bar-container {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .time-label {
+    font-size: 0.68rem;
+    min-width: 28px;
+  }
+
+  .player-extras {
+    display: none !important;
+  }
+
+  .queue-drawer {
+    top: auto;
+    left: 8px;
+    right: 8px;
+    width: auto;
+    bottom: calc(var(--player-height) + 12px);
+    max-height: 60vh;
+    border-radius: 16px;
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+    transform: translateY(140%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .queue-drawer.open {
+    transform: translateY(0);
+  }
+}
+
 

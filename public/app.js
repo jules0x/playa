@@ -2433,8 +2433,82 @@
     }
   });
 
-  // Initialize Collapsible Sidebar Filters & Album View Controls
+  // Mobile Floating Controls Pane (Collapsible Sidebar Drawer)
+  function initMobileControls() {
+    const btnMobileMenu = document.getElementById('btn-mobile-menu');
+    const sidebarEl = document.querySelector('.sidebar');
+    const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+    const sidebarMobileClose = document.getElementById('sidebar-mobile-close');
+
+    function openMobileSidebar() {
+      if (sidebarEl) sidebarEl.classList.add('mobile-open');
+      if (sidebarBackdrop) sidebarBackdrop.classList.add('active');
+      if (btnMobileMenu) btnMobileMenu.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeMobileSidebar() {
+      if (sidebarEl) sidebarEl.classList.remove('mobile-open');
+      if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
+      if (btnMobileMenu) btnMobileMenu.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleMobileSidebar() {
+      if (sidebarEl && sidebarEl.classList.contains('mobile-open')) {
+        closeMobileSidebar();
+      } else {
+        openMobileSidebar();
+      }
+    }
+
+    if (btnMobileMenu) {
+      btnMobileMenu.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMobileSidebar();
+      });
+    }
+
+    if (sidebarMobileClose) {
+      sidebarMobileClose.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeMobileSidebar();
+      });
+    }
+
+    if (sidebarBackdrop) {
+      sidebarBackdrop.addEventListener('click', () => {
+        closeMobileSidebar();
+      });
+    }
+
+    // Auto-close on selection: when tapping any selectable item in the controls drawer
+    if (sidebarEl) {
+      sidebarEl.addEventListener('click', (e) => {
+        const selectable = e.target.closest(
+          '.nav-btn, .nav-item, .decade-chip, .clear-btn, .genre-badge, .rescan-btn, .new-playlist-btn'
+        );
+        if (selectable) {
+          closeMobileSidebar();
+        }
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMobileSidebar();
+    });
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 768) {
+        closeMobileSidebar();
+      }
+    });
+
+    // Provide globally so view changes can safely close the drawer
+    window.PlayaCloseMobileSidebar = closeMobileSidebar;
+  }
+
+  // Initialize Collapsible Sidebar Filters, Mobile Controls & Album View Controls
   initCollapsibleSidebar();
+  initMobileControls();
   initAlbumControls();
 
   // Boot Application with Vault Authentication
