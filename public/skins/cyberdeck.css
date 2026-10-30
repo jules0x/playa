@@ -141,7 +141,7 @@ html[data-skin="cyberdeck"] body {
 }
 
 /* ==========================================================================
-   3. Active CRT Monitor Screen Glass Area & On-Screen Buttons
+   3. Active CRT Monitor Screen Glass Area & Live Music-Reactive Display
    ========================================================================== */
 .cd-crt-screen-zone {
   left: 40.3%;
@@ -154,39 +154,127 @@ html[data-skin="cyberdeck"] body {
   transform-origin: top left;
 }
 
-/* Live Phosphor Green Marquee Line */
+/* Live Now Playing Banner (Covers static NOW PLAYING header) */
 .cd-crt-title-line {
   position: absolute;
-  top: 2%;
-  left: 2%;
-  right: 2%;
+  top: 10.5%;
+  left: 3.5%;
+  right: 3.5%;
+  height: 18px;
+  background: #080414;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
   font-family: var(--font-terminal);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1;
-  color: #34d399;
-  letter-spacing: 0.5px;
-  text-shadow: 0 0 6px #22c55e, 0 0 10px rgba(34, 197, 94, 0.5);
+  color: #fde047;
+  letter-spacing: 0.6px;
+  text-shadow: 0 0 6px #eab308;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   pointer-events: none;
+  z-index: 6;
 }
 
 .cd-crt-prefix {
-  color: #a7f3d0;
+  color: #38bdf8;
   font-weight: bold;
+  margin-right: 4px;
 }
 
 .cd-crt-track-text {
-  color: #34d399;
+  color: #fde047;
 }
 
-/* Clickable CRT Glass Trigger to open Vault Drawer */
-.cd-crt-glass-trigger {
+/* Middle Screen Content Area: Live Spectrum + Live Playlist */
+.cd-crt-screen-content {
   position: absolute;
-  inset: 12% 0% 25% 0%;
-  cursor: pointer;
+  top: 20%;
+  left: 3.5%;
+  right: 3.5%;
+  bottom: 23%;
+  display: flex;
+  gap: 4px;
   z-index: 6;
+}
+
+/* Live 16-Bit Rainbow Spectrum Analyzer */
+.cd-crt-viz-bay {
+  flex: 1.15;
+  background: #080414;
+  position: relative;
+  overflow: hidden;
+  border-radius: 1px;
+}
+
+.cd-crt-viz-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Live Upcoming Playlist & Live Volume Bar (Covers static playlist) */
+.cd-crt-playlist-bay {
+  flex: 0.85;
+  background: #080414;
+  padding: 2px 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.cd-crt-pl-hdr {
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  color: #38bdf8;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.3);
+  padding-bottom: 1px;
+}
+
+.cd-crt-pl-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 1px;
+}
+
+.cd-crt-pl-item {
+  font-family: var(--font-terminal);
+  font-size: 12px;
+  color: #c4b5fd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+}
+
+.cd-crt-pl-item:hover {
+  color: #38bdf8;
+}
+
+.cd-crt-vol-meter {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-pixel);
+  font-size: 6px;
+  color: #a78bfa;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.cd-crt-vol-bars {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: -1px;
+  color: #06b6d4;
+  text-shadow: 0 0 4px #06b6d4;
 }
 
 /* On-Screen CRT Buttons (PLAY, PAUSE, STOP, NEXT, PREV, LOOP) */
@@ -216,7 +304,7 @@ html[data-skin="cyberdeck"] body {
 }
 
 /* ==========================================================================
-   4. Cassette Deck Trigger & Transparent Spinning Spools
+   4. Cassette Deck Trigger (Clicking plays/pauses)
    ========================================================================== */
 .cd-cassette-trigger {
   left: 34.8%;
@@ -227,37 +315,8 @@ html[data-skin="cyberdeck"] body {
   border-radius: 4px;
 }
 
-.cd-spool-hub {
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  pointer-events: none;
-  background: transparent;
-  transform: translate(-50%, -50%);
-}
-
-.cd-spool-hub-left  { left: 28.5%; top: 65.0%; }
-.cd-spool-hub-right { left: 68.0%; top: 65.0%; }
-
-.cd-hub-teeth {
-  position: absolute;
-  inset: 1px;
-  border-radius: 50%;
-  border: 2px dashed rgba(255, 255, 255, 0.65);
-}
-
-.cd-spool-hub.spinning .cd-hub-teeth {
-  animation: cdHubRotate 2.6s linear infinite;
-}
-
-@keyframes cdHubRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
 /* ==========================================================================
-   5. Hardware POWER Switch Trigger on Deck (Square button above POMER text)
+   5. Hardware POWER Switch Trigger on Deck
    ========================================================================== */
 .cd-power-trigger {
   left: 31.6%;
@@ -273,7 +332,7 @@ html[data-skin="cyberdeck"] body {
 }
 
 /* ==========================================================================
-   6. Hardware Rotary Knobs Triggers (Volume, Bass, Treble)
+   6. Hardware Rotary VOLUME Knob on Front Panel
    ========================================================================== */
 .cd-knob-trigger {
   z-index: 8;
@@ -284,26 +343,9 @@ html[data-skin="cyberdeck"] body {
   justify-content: center;
 }
 
-/* VOLUME Knob (Top Row, Left) */
 .cd-knob-vol {
   left: 63.2%;
   top: 71.5%;
-  width: 3.4%;
-  height: 5.8%;
-}
-
-/* BASS / BRES Knob (Top Row, Right) */
-.cd-knob-bass {
-  left: 69.6%;
-  top: 71.5%;
-  width: 3.4%;
-  height: 5.8%;
-}
-
-/* TREBLE Knob (Bottom Row, Center) */
-.cd-knob-treb {
-  left: 63.2%;
-  top: 79.5%;
   width: 3.4%;
   height: 5.8%;
 }

@@ -1,18 +1,15 @@
 // Playa — Cyberdeck 20XX Lo-Fi Terminal & Neon Room Controller
-// All interactive elements map 1:1 to the painted artwork hotspots.
+// All interactive elements map 1:1 to the painted artwork.
 (function () {
   let isInitialized = false;
+  let vizAnimId = null;
   let rainAnimId = null;
   let steamAnimId = null;
 
   function $(id) { return document.getElementById(id); }
 
   let loadedTracks = [];
-  let dialValues = {
-    vol: 0.85,
-    bass: 0,
-    treb: 0
-  };
+  let volumeVal = 0.85;
 
   function getActiveSkin() {
     return document.documentElement.dataset.skin || 'classic';
@@ -26,7 +23,17 @@
     attachEventListeners();
     initRainCanvas();
     initSteamCanvas();
+    startVizLoop();
     isInitialized = true;
+
+    const audio = $('native-audio');
+    if (audio) {
+      audio.addEventListener('play', syncAll);
+      audio.addEventListener('pause', syncAll);
+      audio.addEventListener('volumechange', () => {
+        updateScreenVolumeMeter();
+      });
+    }
 
     window.addEventListener('playa:skinchange', (e) => {
       if (e.detail && e.detail.skin === 'cyberdeck') {
@@ -41,7 +48,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // Synchronize Player State with In-Scene Hotspots
+  // Synchronize Player State with In-Scene Hotspots & CRT Screen
   // --------------------------------------------------------------------------
   function syncAll() {
     if (getActiveSkin() !== 'cyberdeck') return;
@@ -55,7 +62,7 @@
     const titleEl = $('cd-marquee-title');
     if (titleEl) {
       if (track) {
-        titleEl.textContent = `${track.title} // ${track.artist || 'UNKNOWN'}`;
+        titleEl.textContent = `${track.title.toUpperCase()} - "${(track.artist || 'UNKNOWN').toUpperCase()}"`;
       } else {
         titleEl.textContent = 'SYSTEM READY // SELECT TRACK FROM VAULT';
       }
@@ -66,23 +73,76 @@
       drawerNow.textContent = track ? `${track.title} - ${track.artist || 'Unknown'}` : 'NOTHING';
     }
 
-    // 2. Cassette Spools Spinning State
-    const spoolLeft = $('cd-spool-left');
-    const spoolRight = $('cd-spool-right');
-    if (spoolLeft) spoolLeft.classList.toggle('spinning', isPlaying);
-    if (spoolRight) spoolRight.classList.toggle('spinning', isPlaying);
+    // 2. CRT Screen Live Upcoming Playlist (3 slots)
+    updateScreenPlaylist();
 
-    // 3. Repeat Button Hotspot State
+    // 3. CRT Screen Live Segmented Volume Meter
+    updateScreenVolumeMeter();
+
+    // 4. Repeat Button Hotspot State
     if (P) {
       const loopBtn = $('cd-btn-loop');
       if (loopBtn) loopBtn.classList.toggle('active', P.state.repeatMode !== 'none');
     }
 
-    // 4. Populate Tracklist
+    // 5. Populate Tracklist in Vault Drawer
     if (loadedTracks.length === 0) {
       fetchTracks();
     } else {
       updateActiveTrackHighlight();
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // CRT Screen Live Mini-Playlist (3 Slots)
+  // --------------------------------------------------------------------------
+  function updateScreenPlaylist() {
+    const container = $('cd-crt-pl-items');
+    if (!container) return;
+
+    const P = window.PlayaPlayer;
+    const queue = P ? P.state.queue : [];
+    const curIdx = P ? P.state.currentIndex : 0;
+
+    let itemsHtml = '';
+    for (let slot = 0; slot < 3; slot++) {
+      const trackIdx = curIdx + 1 + slot;
+      const t = queue && queue[trackIdx] ? queue[trackIdx] : (loadedTracks[slot] || null);
+      if (t) {
+        itemsHtml += `<div class="cd-crt-pl-item" data-id="${t.id}">0${slot + 1}: ${escapeHtml(t.title)}</div>`;
+      } else {
+        itemsHtml += `<div class="cd-crt-pl-item">0${slot + 1}: --</div>`;
+      }
+    }
+    container.innerHTML = itemsHtml;
+
+    container.querySelectorAll('.cd-crt-pl-item').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = el.dataset.id;
+        if (id && P) {
+          const idx = loadedTracks.findIndex(tr => String(tr.id) === String(id));
+          if (idx !== -1) P.setQueue(loadedTracks, idx);
+        }
+      });
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // CRT Screen Live Volume Meter (Segmented Bars: ||||||||||||||||)
+  // --------------------------------------------------------------------------
+  function updateScreenVolumeMeter() {
+    const barsEl = $('cd-crt-vol-bars');
+    const audio = $('native-audio');
+    const vol = audio ? audio.volume : volumeVal;
+    if (barsEl) {
+      const totalBars = 16;
+      const activeBars = Math.max(0, Math.min(totalBars, Math.round(vol * totalBars)));
+      barsEl.textContent = '|'.repeat(activeBars) + '.'.repeat(totalBars - activeBars);
+    }
+    const hudVol = $('cd-hud-vol');
+    if (hudVol) {
+      hudVol.textContent = `VOL: ${Math.round(vol * 100)}%`;
     }
   }
 
@@ -98,6 +158,7 @@
       const countEl = $('cd-drawer-count');
       if (countEl) countEl.textContent = `${loadedTracks.length} TRACKS`;
       renderTracklist();
+      updateScreenPlaylist();
     } catch (e) {
       console.warn("Cyberdeck fetch tracks error:", e);
     }
@@ -232,13 +293,14 @@
       });
     }
 
-    // 4. CRT Screen Click: Toggle Vault Terminal Drawer
-    const crtGlass = $('cd-crt-glass-trigger');
-    if (crtGlass) {
-      crtGlass.addEventListener('click', () => {
-        const drawer = $('cd-vault-drawer');
-        const isOpen = drawer && drawer.classList.contains('open');
-        setDrawerOpen(!isOpen);
+    // 4. CRT Playlist Area Click: Toggle Vault Terminal Drawer
+    const plBay = $('cd-crt-playlist-bay');
+    if (plBay) {
+      plBay.addEventListener('click', (e) => {
+        // If clicked on an item, it plays that item. If on background, opens drawer
+        if (!e.target.classList.contains('cd-crt-pl-item')) {
+          setDrawerOpen(true);
+        }
       });
     }
 
@@ -280,26 +342,15 @@
       });
     }
 
-    // 8. Rotary Knobs (Volume, Bass, Treble)
+    // 8. Rotary VOLUME Knob (Front Panel)
     setupKnob('cd-dial-vol', 'cd-hud-vol', (val) => {
-      dialValues.vol = val;
+      volumeVal = val;
       if (audio) audio.volume = val;
       const volFill = $('volume-fill');
       if (volFill) volFill.style.width = `${val * 100}%`;
+      updateScreenVolumeMeter();
       return `VOL: ${Math.round(val * 100)}%`;
     }, 0.85);
-
-    setupKnob('cd-dial-bass', 'cd-hud-bass', (val) => {
-      dialValues.bass = (val - 0.5) * 12;
-      const sign = dialValues.bass > 0 ? '+' : '';
-      return `BASS: ${sign}${dialValues.bass.toFixed(1)}dB`;
-    }, 0.5);
-
-    setupKnob('cd-dial-treb', 'cd-hud-treb', (val) => {
-      dialValues.treb = (val - 0.5) * 12;
-      const sign = dialValues.treb > 0 ? '+' : '';
-      return `TREB: ${sign}${dialValues.treb.toFixed(1)}dB`;
-    }, 0.5);
 
     // Keyboard Shortcuts while in Cyberdeck
     window.addEventListener('keydown', (e) => {
@@ -323,7 +374,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // Rotary Knob Controller
+  // Rotary Knob Controller (Volume Only)
   // --------------------------------------------------------------------------
   function setupKnob(id, hudId, onValChange, initialNorm = 0.5) {
     const el = $(id);
@@ -383,12 +434,11 @@
     }
 
     reset(customY = null) {
-      // Cup rim opening is centered at x=30 in 60px canvas
       this.baseX = this.w * 0.5 + (Math.random() - 0.5) * 12;
       this.x = this.baseX;
       this.y = customY !== null ? customY : this.h - 6 - Math.random() * 6;
       this.vy = -(0.38 + Math.random() * 0.35);
-      this.vx = 0.05 + (Math.random() - 0.5) * 0.12; // slight drift right matching drawn steam
+      this.vx = 0.05 + (Math.random() - 0.5) * 0.12;
       this.radius = 1.6 + Math.random() * 1.5;
       this.maxRadius = 8 + Math.random() * 6;
       this.growth = 0.05 + Math.random() * 0.04;
@@ -409,7 +459,6 @@
       }
       const progress = this.life / this.maxLife;
 
-      // Organic sinusoidal drift right along the hand-drawn steam
       this.baseX += this.vx;
       this.x = this.baseX + Math.sin(this.phase + this.life * this.swaySpeed) * this.swayAmp * progress;
       this.y += this.vy;
@@ -486,6 +535,92 @@
     if (steamParticles.length > 40) {
       steamParticles.splice(0, steamParticles.length - 40);
     }
+  }
+
+  // --------------------------------------------------------------------------
+  // Real-Time 16-Bit Rainbow Spectrum & Oscilloscope on CRT Monitor Glass
+  // --------------------------------------------------------------------------
+  function startVizLoop() {
+    const canvas = $('cd-viz-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    const freqData = new Uint8Array(64);
+    const numBars = 18;
+    const barWidth = 8;
+    const barGap = 3;
+    const blockH = 3;
+    const blockGap = 1.5;
+
+    function draw() {
+      vizAnimId = requestAnimationFrame(draw);
+      if (getActiveSkin() !== 'cyberdeck') return;
+
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const P = window.PlayaPlayer;
+      const analyser = P ? P.analyser : null;
+      const audio = $('native-audio');
+      const isPlaying = audio && !audio.paused;
+
+      if (analyser && isPlaying) {
+        analyser.getByteFrequencyData(freqData);
+      } else {
+        // Idle gentle wave
+        for (let i = 0; i < 64; i++) {
+          freqData[i] = Math.max(0, Math.sin(Date.now() * 0.003 + i * 0.28) * 14);
+        }
+      }
+
+      // 1. Rainbow Pixel Spectrum Blocks
+      const totalWidth = numBars * (barWidth + barGap);
+      const startX = Math.floor((w - totalWidth) / 2);
+
+      for (let i = 0; i < numBars; i++) {
+        const val = freqData[i] || 0;
+        const norm = val / 255;
+        const numBlocks = Math.floor(norm * (h / (blockH + blockGap)));
+        const x = startX + i * (barWidth + barGap);
+
+        for (let b = 0; b < numBlocks; b++) {
+          const y = h - (b + 1) * (blockH + blockGap);
+          const ratio = b / 16;
+
+          // Authentic cyberpunk rainbow tiering
+          if (ratio < 0.28) ctx.fillStyle = '#22c55e'; // Green
+          else if (ratio < 0.52) ctx.fillStyle = '#facc15'; // Yellow
+          else if (ratio < 0.72) ctx.fillStyle = '#ec4899'; // Pink
+          else if (ratio < 0.88) ctx.fillStyle = '#a855f7'; // Purple
+          else ctx.fillStyle = '#06b6d4'; // Cyan Peak
+
+          ctx.fillRect(x, y, barWidth, blockH);
+        }
+      }
+
+      // 2. Oscilloscope Wave Line across Spectrum
+      ctx.beginPath();
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = 'rgba(6, 182, 212, 0.8)';
+      ctx.shadowColor = '#06b6d4';
+      ctx.shadowBlur = 4;
+
+      const midY = h * 0.65;
+      for (let x = 0; x < w; x += 3) {
+        const sampleIdx = Math.floor((x / w) * 32);
+        const waveOffset = isPlaying
+          ? (freqData[sampleIdx] - 128) * 0.18 * Math.sin(x * 0.08 + Date.now() * 0.01)
+          : Math.sin(x * 0.06 + Date.now() * 0.004) * 2;
+        const y = midY + waveOffset;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    draw();
   }
 
   // --------------------------------------------------------------------------
