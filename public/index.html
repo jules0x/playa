@@ -636,44 +636,42 @@
       <canvas id="cd-steam-canvas" class="cd-stage-elem cd-steam-canvas" width="60" height="120"></canvas>
       <div id="cd-coffee-mug-zone" class="cd-stage-elem cd-trigger cd-mug-trigger" title="Kowloon Coffee (Hot - Click to puff steam)"></div>
 
-      <!-- 3. Active CRT Monitor Screen Glass Area (x: 555..1060, y: 210..438) -->
-      <div class="cd-stage-elem cd-crt-screen-zone" id="cd-crt-screen-zone">
-        <!-- Live Now Playing Phosphor Line directly on the monitor screen -->
-        <div class="cd-crt-title-line" id="cd-crt-title-line">
-          <span class="cd-crt-prefix">NOW PLAYING: </span>
-          <span class="cd-crt-track-text" id="cd-marquee-title">SYSTEM READY // SELECT TRACK FROM VAULT</span>
-        </div>
-
-        <!-- Live Middle Screen Display: Real-Time Spectrum + Live Playlist & Volume Segment Meter -->
-        <div class="cd-crt-screen-content">
-          <!-- Real-Time 16-Bit Rainbow Pixel Spectrum & Oscilloscope -->
-          <div class="cd-crt-viz-bay">
-            <canvas id="cd-viz-canvas" class="cd-crt-viz-canvas" width="220" height="90"></canvas>
-          </div>
-
-          <!-- Live Upcoming Tracks & Live Volume Meter -->
-          <div class="cd-crt-playlist-bay" id="cd-crt-playlist-bay" title="Click to open Vault Drawer">
-            <div class="cd-crt-pl-hdr">PLAYLIST</div>
-            <div class="cd-crt-pl-items" id="cd-crt-pl-items">
-              <div class="cd-crt-pl-item">01: --</div>
-              <div class="cd-crt-pl-item">02: --</div>
-              <div class="cd-crt-pl-item">03: --</div>
-            </div>
-            <div class="cd-crt-vol-meter" id="cd-crt-vol-meter">
-              <span class="cd-crt-vol-lbl">VOLUME:</span>
-              <span class="cd-crt-vol-bars" id="cd-crt-vol-bars">||||||||||||||||</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Hotspots directly over the drawn CRT screen buttons: PLAY, PAUSE, STOP, NEXT, PREV, LOOP -->
-        <button class="cd-trigger cd-screen-btn cd-sbtn-play" id="cd-btn-play" title="PLAY (▶)"></button>
-        <button class="cd-trigger cd-screen-btn cd-sbtn-pause" id="cd-btn-pause" title="PAUSE (❚❚)"></button>
-        <button class="cd-trigger cd-screen-btn cd-sbtn-stop" id="cd-btn-stop" title="STOP (■)"></button>
-        <button class="cd-trigger cd-screen-btn cd-sbtn-next" id="cd-btn-next" title="NEXT (▶▶)"></button>
-        <button class="cd-trigger cd-screen-btn cd-sbtn-prev" id="cd-btn-prev" title="PREV (◀◀)"></button>
-        <button class="cd-trigger cd-screen-btn cd-sbtn-loop" id="cd-btn-loop" title="LOOP (🔁)"></button>
+      <!-- 3. Active CRT Monitor Screen Elements (x: 580..1040, y: 238..433) -->
+      <!-- Live Now Playing Line (x: 584..1038, y: 238..258) -->
+      <div class="cd-stage-elem cd-crt-title-line" id="cd-crt-title-line">
+        <span class="cd-crt-prefix">NOW PLAYING: </span>
+        <span class="cd-crt-track-text" id="cd-marquee-title">SYSTEM READY // SELECT TRACK FROM VAULT</span>
       </div>
+
+      <!-- Real-Time 16-Bit Rainbow Spectrum & Oscilloscope (x: 581..842, y: 258..384) -->
+      <div class="cd-stage-elem cd-crt-viz-bay" id="cd-crt-viz-bay">
+        <canvas id="cd-viz-canvas" class="cd-crt-viz-canvas" width="260" height="126"></canvas>
+      </div>
+
+      <!-- Live Upcoming Tracks & Live Volume Meter (x: 844..1038, y: 258..384) -->
+      <div class="cd-stage-elem cd-crt-playlist-bay" id="cd-crt-playlist-bay" title="Click to open Vault Drawer">
+        <div class="cd-crt-pl-hdr">PLAYLIST</div>
+        <div class="cd-crt-pl-items" id="cd-crt-pl-items">
+          <div class="cd-crt-pl-item">01: --</div>
+          <div class="cd-crt-pl-item">02: --</div>
+          <div class="cd-crt-pl-item">03: --</div>
+          <div class="cd-crt-pl-item">04: --</div>
+          <div class="cd-crt-pl-item">05: --</div>
+          <div class="cd-crt-pl-item">06: --</div>
+        </div>
+        <div class="cd-crt-vol-meter" id="cd-crt-vol-meter">
+          <span class="cd-crt-vol-lbl">VOLUME:</span>
+          <span class="cd-crt-vol-bars" id="cd-crt-vol-bars">||||||||||||||||</span>
+        </div>
+      </div>
+
+      <!-- Hotspots directly over the drawn CRT screen buttons: PLAY, PAUSE, STOP, NEXT, PREV, LOOP/SHUFFLE -->
+      <button class="cd-stage-elem cd-trigger cd-screen-btn cd-sbtn-play" id="cd-btn-play" title="PLAY (▶)"></button>
+      <button class="cd-stage-elem cd-trigger cd-screen-btn cd-sbtn-pause" id="cd-btn-pause" title="PAUSE (❚❚)"></button>
+      <button class="cd-stage-elem cd-trigger cd-screen-btn cd-sbtn-stop" id="cd-btn-stop" title="STOP (■)"></button>
+      <button class="cd-stage-elem cd-trigger cd-screen-btn cd-sbtn-next" id="cd-btn-next" title="NEXT (▶▶)"></button>
+      <button class="cd-stage-elem cd-trigger cd-screen-btn cd-sbtn-prev" id="cd-btn-prev" title="PREV (◀◀)"></button>
+      <button class="cd-stage-elem cd-trigger cd-screen-btn cd-sbtn-loop" id="cd-btn-loop" title="SHUFFLE (Toggle All Tracks Shuffle)"></button>
 
       <!-- 4. Cassette Deck Trigger (Clicking plays/pauses) -->
       <div class="cd-stage-elem cd-trigger cd-cassette-trigger" id="cd-cassette-trigger" title="Cassette Deck: Click to Play / Pause"></div>
@@ -701,7 +699,11 @@
       <!-- 9. Slide-Out Cyberpunk Vault Terminal Drawer -->
       <div class="cd-vault-drawer" id="cd-vault-drawer">
         <div class="cd-vault-drawer-hdr">
-          <span class="cd-vd-title">CYBER TERMINAL // VAULT TRACKS</span>
+          <span class="cd-vd-title">CYBER TERMINAL // VAULT</span>
+          <div class="cd-vault-tabs">
+            <button class="cd-vtab active" id="cd-vtab-tracks">TRACKS</button>
+            <button class="cd-vtab" id="cd-vtab-albums">ALBUMS</button>
+          </div>
           <button class="cd-vd-close" id="cd-vault-close-btn" title="Close Drawer">✕</button>
         </div>
         <div class="cd-vault-drawer-meta">
@@ -709,7 +711,7 @@
           <span id="cd-drawer-count">00 TRACKS</span>
         </div>
         <div class="cd-vault-tracklist" id="cd-playlist-scroll">
-          <!-- Populated from vault tracks -->
+          <!-- Populated from vault tracks or albums -->
         </div>
       </div>
     </div>
