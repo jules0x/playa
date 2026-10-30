@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import * as mm from "music-metadata";
+import sharp from "sharp";
 import "dotenv/config";
 import { GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { db, initDatabase } from "./db.js";
@@ -11,6 +12,35 @@ const DATA_DIR = process.env.DATA_DIR || path.resolve("./data");
 const COVERS_DIR = path.join(DATA_DIR, "covers");
 if (!fs.existsSync(COVERS_DIR)) {
   fs.mkdirSync(COVERS_DIR, { recursive: true });
+}
+
+/**
+ * Optimizes an image buffer:
+ * - Downscales to max 450x450 (ideal retina size for grid & mobile)
+ * - Compresses with high-efficiency JPEG (82% quality, mozjpeg)
+ * - Returns optimized Buffer and sha1 hash
+ */
+export async function optimizeCoverImage(rawBuffer) {
+  if (!rawBuffer || rawBuffer.length === 0) return null;
+  try {
+    const optimized = await sharp(rawBuffer)
+      .resize(450, 450, {
+        fit: "cover",
+        withoutEnlargement: true
+      })
+      .jpeg({
+        quality: 82,
+        mozjpeg: true
+      })
+      .toBuffer();
+
+    const hash = crypto.createHash("sha1").update(optimized).digest("hex");
+    return { data: optimized, hash };
+  } catch (err) {
+    // If sharp fails to decode, fallback to original raw buffer
+    const hash = crypto.createHash("sha1").update(rawBuffer).digest("hex");
+    return { data: rawBuffer, hash };
+  }
 }
 
 export function computeDecade(year) {
@@ -325,16 +355,19 @@ export async function scanSpacesBucket(options = {}) {
         }));
         const chunks = [];
         for await (const chunk of imgRes.Body) chunks.push(chunk);
-        const data = Buffer.concat(chunks);
-        if (data && data.length > 0) {
-          const hash = crypto.createHash("sha1").update(data).digest("hex");
-          const coverPath = path.join(COVERS_DIR, `${hash}.jpg`);
-          if (!fs.existsSync(coverPath)) {
-            fs.writeFileSync(coverPath, data);
+        const rawData = Buffer.concat(chunks);
+        if (rawData && rawData.length > 0) {
+          const optimized = await optimizeCoverImage(rawData);
+          if (optimized) {
+            const { data, hash } = optimized;
+            const coverPath = path.join(COVERS_DIR, `${hash}.jpg`);
+            if (!fs.existsSync(coverPath)) {
+              fs.writeFileSync(coverPath, data);
+            }
+            uploadSpacesCover(hash, data).catch(() => {});
+            albumCoverCache.set(folderDir, hash);
+            return hash;
           }
-          uploadSpacesCover(hash, data).catch(() => {});
-          albumCoverCache.set(folderDir, hash);
-          return hash;
         }
       } catch (err) {
         // fallback
@@ -363,16 +396,19 @@ export async function scanSpacesBucket(options = {}) {
 
         if (artUrl) {
           const res = await fetch(artUrl);
-          const data = Buffer.from(await res.arrayBuffer());
-          if (data && data.length > 0) {
-            const hash = crypto.createHash("sha1").update(data).digest("hex");
-            const coverPath = path.join(COVERS_DIR, `${hash}.jpg`);
-            if (!fs.existsSync(coverPath)) {
-              fs.writeFileSync(coverPath, data);
+          const rawData = Buffer.from(await res.arrayBuffer());
+          if (rawData && rawData.length > 0) {
+            const optimized = await optimizeCoverImage(rawData);
+            if (optimized) {
+              const { data, hash } = optimized;
+              const coverPath = path.join(COVERS_DIR, `${hash}.jpg`);
+              if (!fs.existsSync(coverPath)) {
+                fs.writeFileSync(coverPath, data);
+              }
+              uploadSpacesCover(hash, data).catch(() => {});
+              albumCoverCache.set(folderDir, hash);
+              return hash;
             }
-            uploadSpacesCover(hash, data).catch(() => {});
-            albumCoverCache.set(folderDir, hash);
-            return hash;
           }
         }
       } catch (err) {}
@@ -519,14 +555,17 @@ export async function scanSpacesBucket(options = {}) {
         let coverHash = folderCoverHash;
         if (!coverHash && common.picture && common.picture[0] && common.picture[0].data) {
           const picData = common.picture[0].data;
-          const hash = crypto.createHash("sha1").update(picData).digest("hex");
-          const coverPath = path.join(COVERS_DIR, `${hash}.jpg`);
-          if (!fs.existsSync(coverPath)) {
-            fs.writeFileSync(coverPath, picData);
+          const optimized = await optimizeCoverImage(picData);
+          if (optimized) {
+            const { data, hash } = optimized;
+            const coverPath = path.join(COVERS_DIR, `${hash}.jpg`);
+            if (!fs.existsSync(coverPath)) {
+              fs.writeFileSync(coverPath, data);
+            }
+            uploadSpacesCover(hash, data).catch(() => {});
+            coverHash = hash;
+            albumCoverCache.set(item.dir, hash);
           }
-          uploadSpacesCover(hash, picData).catch(() => {});
-          coverHash = hash;
-          albumCoverCache.set(item.dir, hash);
         }
         if (!coverHash) {
           coverHash = await resolveFolderCover(item.dir, artist, album);

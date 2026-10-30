@@ -259,6 +259,21 @@ fastify.get("/api/stream/:id", async (req, reply) => {
   }
 });
 
+// In-memory LRU cache for cover art (max 300 items, ~15-20MB total)
+const coverMemoryCache = new Map();
+const MAX_MEM_COVERS = 300;
+
+function setCoverMemoryCache(hash, buffer) {
+  if (coverMemoryCache.size >= MAX_MEM_COVERS) {
+    const oldestKey = coverMemoryCache.keys().next().value;
+    coverMemoryCache.delete(oldestKey);
+  }
+  coverMemoryCache.set(hash, buffer);
+}
+
+// In-flight request deduplication map to prevent multiple S3 / disk fetches for identical covers
+const inFlightCovers = new Map();
+
 // 2. Cover Art Endpoint with Permanent Browser Caching (Zero Remote Queries)
 fastify.get("/api/cover/:hash", async (req, reply) => {
   const { hash } = req.params;
@@ -266,44 +281,79 @@ fastify.get("/api/cover/:hash", async (req, reply) => {
     return reply.type("image/svg+xml").send(DEFAULT_COVER_SVG);
   }
 
-  const coverPath = path.join(COVERS_DIR, `${hash}.jpg`);
-  if (fs.existsSync(coverPath)) {
+  // 1. Instant RAM Cache hit (< 1ms)
+  if (coverMemoryCache.has(hash)) {
     return reply
       .header("Cache-Control", "public, max-age=31536000, immutable")
       .type("image/jpeg")
-      .send(fs.createReadStream(coverPath));
+      .send(coverMemoryCache.get(hash));
+  }
+
+  // 2. Local disk check (fast I/O)
+  const coverPath = path.join(COVERS_DIR, `${hash}.jpg`);
+  if (fs.existsSync(coverPath)) {
+    try {
+      const data = fs.readFileSync(coverPath);
+      setCoverMemoryCache(hash, data);
+      return reply
+        .header("Cache-Control", "public, max-age=31536000, immutable")
+        .type("image/jpeg")
+        .send(data);
+    } catch (e) {}
   }
 
   // Fallback to local repo covers directory if DATA_DIR is a custom mount (like /var/data)
   const localRepoCover = path.resolve("./data/covers", `${hash}.jpg`);
   if (fs.existsSync(localRepoCover)) {
-    return reply
-      .header("Cache-Control", "public, max-age=31536000, immutable")
-      .type("image/jpeg")
-      .send(fs.createReadStream(localRepoCover));
+    try {
+      const data = fs.readFileSync(localRepoCover);
+      setCoverMemoryCache(hash, data);
+      return reply
+        .header("Cache-Control", "public, max-age=31536000, immutable")
+        .type("image/jpeg")
+        .send(data);
+    } catch (e) {}
   }
 
-  // Stream directly from DigitalOcean Spaces if missing on disk and cache for future requests
+  // 3. S3 / Spaces lookup with in-flight deduplication (merges parallel requests into 1)
   if (isSpacesConfigured()) {
     try {
-      const s3Response = await getSpacesObjectStream(`covers/${hash}.jpg`);
-      if (s3Response && s3Response.Body) {
-        const chunks = [];
-        for await (const chunk of s3Response.Body) {
-          chunks.push(chunk);
-        }
-        const data = Buffer.concat(chunks);
-        try {
-          fs.writeFileSync(coverPath, data);
-        } catch (e) {}
+      let fetchPromise = inFlightCovers.get(hash);
+      if (!fetchPromise) {
+        fetchPromise = (async () => {
+          try {
+            const s3Response = await getSpacesObjectStream(`covers/${hash}.jpg`);
+            if (s3Response && s3Response.Body) {
+              const chunks = [];
+              for await (const chunk of s3Response.Body) {
+                chunks.push(chunk);
+              }
+              const data = Buffer.concat(chunks);
+              try {
+                fs.writeFileSync(coverPath, data);
+              } catch (e) {}
+              setCoverMemoryCache(hash, data);
+              return data;
+            }
+          } catch (err) {
+            // Not in Spaces
+          }
+          return null;
+        })();
+        inFlightCovers.set(hash, fetchPromise);
+      }
 
+      const fetchedData = await fetchPromise;
+      inFlightCovers.delete(hash);
+
+      if (fetchedData) {
         return reply
           .header("Cache-Control", "public, max-age=31536000, immutable")
           .type("image/jpeg")
-          .send(data);
+          .send(fetchedData);
       }
     } catch (err) {
-      // Image not in Spaces covers/
+      inFlightCovers.delete(hash);
     }
   }
 
