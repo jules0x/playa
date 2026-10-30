@@ -57,7 +57,7 @@
   function render(time) {
     requestAnimationFrame(render);
 
-    const skin = document.documentElement.dataset.skin || 'classic';
+    const skin = document.documentElement.dataset.skin || 'aurora';
     // Active on aurora skin
     if (skin !== 'aurora') {
       ctx.clearRect(0, 0, width, height);

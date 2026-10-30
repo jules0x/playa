@@ -231,16 +231,24 @@ html[data-skin="aurora"] .view-title {
 
 /* Aurora view-header controls & grid density */
 html[data-skin="aurora"] .view-select {
-  background: rgba(255, 255, 255, 0.06);
+  background-color: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.12);
   color: #e0e7ff;
   backdrop-filter: blur(12px);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a5b4fc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
 }
 
 html[data-skin="aurora"] .view-select:hover,
 html[data-skin="aurora"] .view-select:focus {
   border-color: rgba(199, 210, 254, 0.4);
   box-shadow: 0 0 14px rgba(129, 140, 248, 0.25);
+}
+
+html[data-skin="aurora"] .view-select option {
+  background-color: #0b1120;
+  color: #e2e8f0;
 }
 
 html[data-skin="aurora"] .grid-cols-pill-group {
@@ -607,4 +615,124 @@ html[data-skin="aurora"] .btn-tracks-shuffle.active {
   border-color: rgba(199, 210, 254, 0.5);
   color: #fff;
   box-shadow: 0 0 16px rgba(129, 140, 248, 0.4);
+}
+
+/* ---------- Aurora View Navigation & Back Button ---------- */
+html[data-skin="aurora"] .btn-view-back {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top-color: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  color: var(--text-muted);
+  box-shadow: 0 4px 16px rgba(5, 4, 20, 0.3);
+}
+
+html[data-skin="aurora"] .btn-view-back:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(199, 210, 254, 0.4);
+  color: #fff;
+  box-shadow: 0 6px 24px rgba(129, 140, 248, 0.25);
+}
+
+/* ---------- Aurora Album Row Cards ---------- */
+html[data-skin="aurora"] .album-row-card {
+  background: rgba(255, 255, 255, 0.035);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top-color: rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--glass-shadow);
+}
+
+html[data-skin="aurora"] .album-row-card.active-album {
+  border-color: rgba(165, 160, 255, 0.4);
+  box-shadow: 0 12px 40px rgba(129, 140, 248, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+html[data-skin="aurora"] .album-row-cover-wrap {
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 30px rgba(5, 4, 20, 0.55);
+}
+
+html[data-skin="aurora"] .btn-album-row-play {
+  background: var(--accent-gradient);
+  color: #0b0f19;
+  font-weight: 800;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(129, 140, 248, 0.4);
+}
+
+html[data-skin="aurora"] .btn-album-row-play:hover {
+  box-shadow: 0 6px 22px rgba(129, 140, 248, 0.55);
+}
+
+html[data-skin="aurora"] .btn-album-row-shuffle {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  color: var(--text-muted);
+}
+
+html[data-skin="aurora"] .btn-album-row-shuffle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(199, 210, 254, 0.4);
+  color: #fff;
+}
+
+html[data-skin="aurora"] .btn-album-row-add {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: var(--text-muted);
+}
+
+html[data-skin="aurora"] .btn-album-row-add:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(199, 210, 254, 0.4);
+  color: #fff;
+}
+
+html[data-skin="aurora"] .subtrack-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+html[data-skin="aurora"] .subtrack-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+html[data-skin="aurora"] .subtrack-row.active-track {
+  background: linear-gradient(90deg, rgba(129, 140, 248, 0.2) 0%, rgba(192, 132, 252, 0.12) 100%);
+}
+
+html[data-skin="aurora"] .subtrack-row.active-track .subtrack-title {
+  color: #fff;
+  text-shadow: 0 0 12px rgba(165, 160, 255, 0.6);
+}
+
+html[data-skin="aurora"] .subtrack-eq span {
+  background: var(--accent-gradient);
+}
+
+html[data-skin="aurora"] .selected-card {
+  outline: 2px solid #a5a0ff;
+  outline-offset: 4px;
+  box-shadow: 0 0 30px rgba(165, 160, 255, 0.45), 0 10px 40px rgba(5, 4, 20, 0.6) !important;
+}
+
+html[data-skin="aurora"] .btn-album-row-shuffle.active,
+html[data-skin="aurora"] .btn-tracks-shuffle.active {
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.4), rgba(192, 132, 252, 0.35)) !important;
+  border-color: rgba(199, 210, 254, 0.7) !important;
+  color: #fff !important;
+  box-shadow: 0 0 20px rgba(129, 140, 248, 0.6) !important;
+}
+
+html[data-skin="aurora"] .badge-genre:hover {
+  background: rgba(165, 160, 255, 0.25);
+  border-color: rgba(199, 210, 254, 0.5);
+  box-shadow: 0 0 12px rgba(129, 140, 248, 0.4);
 }

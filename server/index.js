@@ -575,15 +575,23 @@ fastify.get("/api/albums", async (req) => {
     orderBy = "track_count DESC, tracks.album COLLATE NOCASE ASC";
   }
 
+  const isArtistScoped = Boolean(req.query.artist);
+  const groupBy = isArtistScoped
+    ? "tracks.album"
+    : "tracks.album, COALESCE(NULLIF(tracks.album_artist, ''), tracks.artist)";
+  const artistSelect = isArtistScoped
+    ? "COALESCE(@artist, NULLIF(MAX(tracks.album_artist), ''), MAX(tracks.artist))"
+    : "COALESCE(NULLIF(tracks.album_artist, ''), tracks.artist)";
+
   const sql = `
     SELECT tracks.album,
-           COALESCE(NULLIF(tracks.album_artist, ''), tracks.artist) as artist,
+           ${artistSelect} as artist,
            tracks.year, tracks.decade, tracks.genre, MAX(tracks.cover_hash) as cover_hash,
            COUNT(*) as track_count, SUM(tracks.duration) as total_duration
     FROM tracks
     ${joinFts}
     ${whereClause}
-    GROUP BY tracks.album, COALESCE(NULLIF(tracks.album_artist, ''), tracks.artist)
+    GROUP BY ${groupBy}
     ORDER BY ${orderBy}
   `;
   return db.prepare(sql).all(params);

@@ -6,7 +6,7 @@
   <title>Playa — Personal Vault Player</title>
   <script>
     // Apply saved skin before first paint to avoid a flash of the default skin
-    (function () { try { var s = localStorage.getItem('playa-skin'); document.documentElement.dataset.skin = s || 'classic'; } catch (e) { document.documentElement.dataset.skin = 'classic'; } })();
+    (function () { try { var s = localStorage.getItem('playa-skin'); document.documentElement.dataset.skin = s || 'aurora'; } catch (e) { document.documentElement.dataset.skin = 'aurora'; } })();
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -195,6 +195,11 @@
                   <button class="grid-col-btn active" data-cols="auto" title="Auto (Responsive)">Auto</button>
                 </div>
               </div>
+              <!-- Shuffle Button -->
+              <button class="btn-tracks-shuffle" id="btn-albums-shuffle" title="Shuffle displayed albums">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+                <span>Shuffle Order</span>
+              </button>
             </div>
           </div>
           <div class="albums-grid" id="albums-grid" data-grid="auto">
@@ -240,10 +245,68 @@
         <!-- View 3: Artists Grid -->
         <div class="view-panel" id="view-artists">
           <div class="view-header">
-            <h2 class="view-title">Artists</h2>
-            <div class="view-meta" id="artists-header-meta">All Artists</div>
+            <div class="view-header-left">
+              <h2 class="view-title">Artists</h2>
+              <div class="view-meta" id="artists-header-meta">All Artists</div>
+            </div>
+            <div class="view-header-actions">
+              <button class="btn-tracks-shuffle" id="btn-artists-shuffle" title="Shuffle displayed artists">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+                <span>Shuffle Order</span>
+              </button>
+            </div>
           </div>
           <div class="artists-grid" id="artists-grid">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- View 5: Artist Detail (Albums with Tracks Sub-rows) -->
+        <div class="view-panel" id="view-artist-detail">
+          <div class="view-header">
+            <div class="view-header-left view-header-nav">
+              <button class="btn-view-back" id="btn-back-artist-detail" title="Back to Artists">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                <span>Back to Artists</span>
+              </button>
+              <div class="detail-header-info">
+                <h2 class="view-title" id="artist-detail-title">Artist Name</h2>
+                <div class="view-meta" id="artist-detail-meta">0 Albums • 0 Tracks</div>
+              </div>
+            </div>
+            <div class="view-header-actions">
+              <button class="btn-tracks-shuffle" id="btn-artist-active-shuffle" title="Shuffle tracks in the active album">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+                <span>Shuffle Active Album</span>
+              </button>
+            </div>
+          </div>
+          <div class="artist-albums-container" id="artist-albums-list">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- View 6: Album Detail (Album Cover + Tracks Sub-rows) -->
+        <div class="view-panel" id="view-album-detail">
+          <div class="view-header">
+            <div class="view-header-left view-header-nav">
+              <button class="btn-view-back" id="btn-back-album-detail" title="Back to Albums">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                <span>Back to Albums</span>
+              </button>
+              <div class="detail-header-info">
+                <h2 class="view-title" id="album-detail-title">Album Name</h2>
+                <div class="view-meta" id="album-detail-meta">Album by Artist</div>
+              </div>
+            </div>
+            <div class="view-header-actions">
+              <button class="btn-tracks-shuffle" id="btn-album-detail-shuffle" title="Shuffle this album's tracks">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+                <span>Shuffle Album</span>
+              </button>
+            </div>
+          </div>
+          <div class="album-detail-container" id="album-detail-content">
             <!-- Injected via JS -->
           </div>
         </div>

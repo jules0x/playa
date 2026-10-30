@@ -4,7 +4,7 @@
 // link it in index.html, and add an entry to SKINS below.
 (function () {
   const STORAGE_KEY = 'playa-skin';
-  const DEFAULT_SKIN = 'classic';
+  const DEFAULT_SKIN = 'aurora';
 
   const SKINS = [
     { id: 'classic', name: 'Classic Neon', desc: 'Original cyan & violet', swatch: 'linear-gradient(135deg, #00f2fe, #7f00ff)' },

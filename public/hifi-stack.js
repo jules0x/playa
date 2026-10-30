@@ -19,7 +19,7 @@
   function $(id) { return document.getElementById(id); }
 
   function getActiveSkin() {
-    return document.documentElement.dataset.skin || 'classic';
+    return document.documentElement.dataset.skin || 'aurora';
   }
 
   function init() {

@@ -25,6 +25,11 @@
     activeAlbumScope: null,
     playbackContext: null,
     isTracksShuffled: false,
+    isAlbumsShuffled: false,
+    isArtistsShuffled: false,
+    navHistory: [],
+    activeArtist: null,
+    activeAlbumDetail: null,
     stats: {},
     decades: [],
     genres: [],
@@ -87,6 +92,15 @@
   const albumsGridDensity = document.getElementById('albums-grid-density');
   const tracksList = document.getElementById('tracks-list');
   const artistsGrid = document.getElementById('artists-grid');
+
+  const artistAlbumsList = document.getElementById('artist-albums-list');
+  const albumDetailContent = document.getElementById('album-detail-content');
+  const btnAlbumsShuffle = document.getElementById('btn-albums-shuffle');
+  const btnArtistsShuffle = document.getElementById('btn-artists-shuffle');
+  const btnBackArtistDetail = document.getElementById('btn-back-artist-detail');
+  const btnBackAlbumDetail = document.getElementById('btn-back-album-detail');
+  const btnArtistActiveShuffle = document.getElementById('btn-artist-active-shuffle');
+  const btnAlbumDetailShuffle = document.getElementById('btn-album-detail-shuffle');
 
   const toggleQueueBtn = document.getElementById('toggle-queue-btn');
   const queueDrawer = document.getElementById('queue-drawer');
@@ -322,7 +336,7 @@
     const dataArray = new Uint8Array(bufferLength);
     analyser.getByteFrequencyData(dataArray);
 
-    const skin = document.documentElement.dataset.skin || 'classic';
+    const skin = document.documentElement.dataset.skin || 'aurora';
 
     // Draw main waveform / VU meter in bottom player
     if (waveformCtx && waveformCanvas) {
@@ -563,6 +577,39 @@
     });
   }
 
+  // Handle Genre Selection across the entire application
+  function handleGenreSelection(genreName) {
+    if (!genreName || genreName === 'N/A' || genreName === 'Other') return;
+
+    if (state.filters.genre === genreName) {
+      state.filters.genre = null;
+    } else {
+      state.filters.genre = genreName;
+      state.filters.artist = null;
+      state.filters.album = null;
+    }
+    renderGenres();
+    renderDecades();
+    updateActiveFilterPills();
+
+    // When clicking a genre while looking at an album, viewport moves to artist view with filter.
+    // If already on albums or tracks, keep current view and filter it.
+    if (state.activeView === 'album-detail' || state.activeView === 'artist-detail') {
+      state.navHistory = [];
+      state.activeArtist = null;
+      state.activeAlbumDetail = null;
+      switchView('artists');
+    } else if (state.activeView === 'albums') {
+      reloadActiveView();
+    } else if (state.activeView === 'tracks') {
+      reloadActiveView();
+    } else if (state.activeView === 'artists') {
+      reloadActiveView();
+    } else {
+      switchView('artists');
+    }
+  }
+
   // Render Genres in Sidebar (with data attributes)
   function renderGenres() {
     genresContainer.innerHTML = '';
@@ -576,17 +623,7 @@
         <span class="subcount-genre" style="opacity:0.7; font-size:0.7rem;">(${count})</span>
       `;
       badge.onclick = () => {
-        if (state.filters.genre === g.genre) {
-          state.filters.genre = null;
-        } else {
-          state.filters.genre = g.genre;
-          state.filters.artist = null;
-          state.filters.album = null;
-        }
-        renderGenres();
-        renderDecades();
-        updateActiveFilterPills();
-        reloadActiveView();
+        handleGenreSelection(g.genre);
       };
       genresContainer.appendChild(badge);
     });
@@ -803,6 +840,8 @@
       albumsSortSelect.addEventListener('change', () => {
         state.albumSort = albumsSortSelect.value;
         try { localStorage.setItem('playa:albums-sort', state.albumSort); } catch (e) {}
+        state.isAlbumsShuffled = false;
+        if (btnAlbumsShuffle) btnAlbumsShuffle.classList.remove('active');
         state.albums = sortAlbumsList(state.albums, state.albumSort);
         renderAlbums();
       });
@@ -863,13 +902,395 @@
         };
       }
 
-      // Card click opens album tracklist without creating filter pills
+      // Card click opens album detail with cover on left and tracks on right
       card.onclick = () => {
-        showAlbumTracks(alb.album, alb.artist);
+        pushNavHistory({ type: 'albums', selectedAlbum: alb.album, scrollTop: contentBody.scrollTop });
+        showAlbumDetail(alb.album, alb.artist);
       };
 
       albumsGrid.appendChild(card);
     });
+  }
+
+  // --- View Navigation History & Selection Helpers ---
+  function pushNavHistory(entry) {
+    state.navHistory.push(entry);
+  }
+
+  function goBack() {
+    if (state.navHistory.length === 0) {
+      switchView('albums');
+      return;
+    }
+    const prev = state.navHistory.pop();
+    if (prev.filtersCleared) {
+      state.activeArtist = null;
+      state.activeAlbumDetail = null;
+      switchView(prev.type || prev.view || 'albums');
+      return;
+    }
+    if (prev.type === 'artists') {
+      state.activeArtist = null;
+      switchView('artists', true);
+      if (prev.selectedArtist) {
+        highlightSelectedCard('artist', prev.selectedArtist);
+      }
+      if (prev.scrollTop != null) {
+        setTimeout(() => { contentBody.scrollTop = prev.scrollTop; }, 60);
+      }
+    } else if (prev.type === 'albums') {
+      state.activeAlbumDetail = null;
+      switchView('albums', true);
+      if (prev.selectedAlbum) {
+        highlightSelectedCard('album', prev.selectedAlbum);
+      }
+      if (prev.scrollTop != null) {
+        setTimeout(() => { contentBody.scrollTop = prev.scrollTop; }, 60);
+      }
+    } else {
+      switchView(prev.type || prev.view || 'albums');
+    }
+  }
+
+  function highlightSelectedCard(type, id) {
+    setTimeout(() => {
+      document.querySelectorAll('.selected-card').forEach(el => el.classList.remove('selected-card'));
+      let target = null;
+      const targetStr = String(id || '').trim().toLowerCase();
+      if (type === 'artist') {
+        document.querySelectorAll('.artist-card').forEach(card => {
+          const nameEl = card.querySelector('.artist-name');
+          if (nameEl && nameEl.textContent.trim().toLowerCase() === targetStr) {
+            target = card;
+          }
+        });
+      } else if (type === 'album') {
+        document.querySelectorAll('.album-card').forEach(card => {
+          const titleEl = card.querySelector('.album-card-title');
+          if (titleEl && titleEl.textContent.trim().toLowerCase() === targetStr) {
+            target = card;
+          }
+        });
+      }
+      if (target) {
+        target.classList.add('selected-card');
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  }
+
+  // Sync Shuffle UI across bottom player, detail headers, and album rows
+  function syncShuffleUI() {
+    const isShuffle = Boolean(state.isShuffle);
+
+    if (btnShuffle) {
+      btnShuffle.classList.toggle('active', isShuffle);
+      btnShuffle.title = isShuffle ? 'Shuffle is ON (Click to turn off)' : 'Shuffle is OFF (Click to turn on)';
+    }
+
+    if (btnAlbumDetailShuffle) {
+      btnAlbumDetailShuffle.classList.toggle('active', isShuffle);
+      const span = btnAlbumDetailShuffle.querySelector('span');
+      if (span) span.textContent = isShuffle ? 'Shuffle: ON' : 'Shuffle Album';
+    }
+
+    if (btnArtistActiveShuffle) {
+      btnArtistActiveShuffle.classList.toggle('active', isShuffle);
+      const span = btnArtistActiveShuffle.querySelector('span');
+      if (span) span.textContent = isShuffle ? 'Shuffle: ON' : 'Shuffle Active Album';
+    }
+
+    document.querySelectorAll('.album-row-card').forEach(card => {
+      const albShuffleBtn = card.querySelector('.btn-album-row-shuffle');
+      if (!albShuffleBtn) return;
+      const isCardAlbumPlaying = state.playbackContext?.type === 'album' && state.playbackContext?.album === card.dataset.album;
+      const shouldBeActive = isShuffle && isCardAlbumPlaying;
+      albShuffleBtn.classList.toggle('active', shouldBeActive);
+      const span = albShuffleBtn.querySelector('span');
+      if (span) span.textContent = shouldBeActive ? 'Shuffle: ON' : 'Shuffle';
+    });
+  }
+
+  // Reusable Album Row Card Component (Cover on left, track sub-rows on right)
+  function createAlbumRowCard(alb, albumTracks, options = {}) {
+    const card = document.createElement('div');
+    const isCurrentAlbum = state.currentTrack && state.currentTrack.album === alb.album;
+    card.className = `album-row-card${isCurrentAlbum ? ' active-album' : ''}`;
+    card.dataset.album = alb.album;
+    card.dataset.artist = alb.artist;
+
+    const coverUrl = `/api/cover/${alb.cover_hash || 'default'}`;
+    const totalDuration = albumTracks.reduce((sum, t) => sum + (t.duration || 0), 0);
+    const isThisAlbumPlaying = state.playbackContext?.type === 'album' && state.playbackContext?.album === alb.album;
+    const isShuffleActive = Boolean(state.isShuffle) && isThisAlbumPlaying;
+
+    card.innerHTML = `
+      <div class="album-row-aside">
+        <div class="album-row-cover-wrap" title="Play ${alb.album}">
+          <img src="${coverUrl}" alt="${alb.album}" class="album-row-cover img-lazy" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.src='/api/cover/default'; this.classList.add('loaded');">
+          <div class="album-row-play-overlay">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          </div>
+        </div>
+        <div class="album-row-meta">
+          <h3 class="album-row-title" title="${alb.album}">${alb.album}</h3>
+          <div class="album-row-artist" title="${alb.artist}">${alb.artist}</div>
+          <div class="album-row-tags">
+            <span class="badge-decade">${alb.year || alb.decade || 'N/A'}</span>
+            <span class="badge-genre">${alb.genre || 'Underground'}</span>
+          </div>
+          <div class="album-row-stats">${albumTracks.length} Track${albumTracks.length === 1 ? '' : 's'} • ${formatTime(totalDuration)}</div>
+          <div class="album-row-actions">
+            <button class="btn-album-row-play" title="Play Album (Normal order)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Play</span>
+            </button>
+            <button class="btn-album-row-shuffle${isShuffleActive ? ' active' : ''}" title="${isShuffleActive ? 'Shuffle is ON (Click to turn off)' : 'Shuffle Album Tracks'}">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+              <span>${isShuffleActive ? 'Shuffle: ON' : 'Shuffle'}</span>
+            </button>
+            <button class="btn-album-row-add" title="Add Album to Playlist">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="album-row-tracks">
+        <table class="subtrack-table">
+          <thead>
+            <tr>
+              <th style="width:44px; text-align:center;">#</th>
+              <th>TITLE</th>
+              <th style="width:70px; text-align:right;">TIME</th>
+              <th style="width:44px; text-align:center;">ADD</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${albumTracks.map((t, idx) => {
+              const isCurrentTrack = state.currentTrack && state.currentTrack.id === t.id;
+              const featText = t.artist && t.artist !== alb.artist ? `<span class="feat-artist">• ${t.artist}</span>` : '';
+              return `
+                <tr class="subtrack-row${isCurrentTrack ? ' active-track' : ''}" data-track-id="${t.id}" data-index="${idx}">
+                  <td class="subtrack-no">
+                    <span class="num">${t.track_no != null && t.track_no > 0 ? t.track_no : idx + 1}</span>
+                    <span class="play-icon">▶</span>
+                    <div class="subtrack-eq"><span></span><span></span><span></span></div>
+                  </td>
+                  <td class="subtrack-title">
+                    <span>${t.title}</span>${featText}
+                  </td>
+                  <td class="subtrack-duration">${formatTime(t.duration)}</td>
+                  <td class="subtrack-actions">
+                    <button class="btn-add-track-playlist" title="Add to Playlist">+</button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    // Click Artist name in album row to navigate to that artist
+    const artistNameEl = card.querySelector('.album-row-artist');
+    if (artistNameEl && options.allowArtistClick) {
+      artistNameEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pushNavHistory({ type: 'albums', selectedAlbum: alb.album, scrollTop: contentBody.scrollTop });
+        showArtistDetail(alb.artist);
+      });
+    }
+
+    // Play album handler (clicking cover or Play button)
+    const playAlbum = () => {
+      if (albumTracks.length > 0) {
+        state.playbackContext = { type: 'album', album: alb.album, artist: alb.artist };
+        state.isShuffle = false;
+        setQueue(albumTracks, 0);
+        updatePlayerUI();
+        highlightActiveTrack();
+        syncShuffleUI();
+        showToast(`Playing "${alb.album}" (Normal order)`);
+      }
+    };
+
+    const coverWrap = card.querySelector('.album-row-cover-wrap');
+    if (coverWrap) coverWrap.addEventListener('click', playAlbum);
+
+    const playBtn = card.querySelector('.btn-album-row-play');
+    if (playBtn) playBtn.addEventListener('click', playAlbum);
+
+    // Shuffle album handler
+    const shuffleBtn = card.querySelector('.btn-album-row-shuffle');
+    if (shuffleBtn) {
+      shuffleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (albumTracks.length === 0) return;
+
+        const isCurrentlyPlayingThisAlbum = state.playbackContext?.type === 'album' && state.playbackContext?.album === alb.album;
+
+        if (isCurrentlyPlayingThisAlbum) {
+          state.isShuffle = !state.isShuffle;
+          syncShuffleUI();
+          showToast(state.isShuffle ? `Shuffle: ON ("${alb.album}")` : `Shuffle: OFF (Normal track order)`);
+        } else {
+          state.playbackContext = { type: 'album', album: alb.album, artist: alb.artist };
+          state.isShuffle = true;
+          const randIdx = Math.floor(Math.random() * albumTracks.length);
+          setQueue(albumTracks, randIdx);
+          updatePlayerUI();
+          highlightActiveTrack();
+          syncShuffleUI();
+          showToast(`Shuffle: ON ("${alb.album}")`);
+        }
+      });
+    }
+
+    // Add album to playlist
+    const addAlbumBtn = card.querySelector('.btn-album-row-add');
+    if (addAlbumBtn) {
+      addAlbumBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openAddToPlaylistModal({ type: 'album', album: alb });
+      });
+    }
+
+    // Subtrack row clicks
+    card.querySelectorAll('.subtrack-row').forEach(row => {
+      const trackIdx = parseInt(row.dataset.index, 10);
+      const trackObj = albumTracks[trackIdx];
+
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-add-track-playlist')) return;
+        state.playbackContext = { type: 'album', album: alb.album, artist: alb.artist };
+        setQueue(albumTracks, trackIdx);
+        updatePlayerUI();
+        highlightActiveTrack();
+      });
+
+      const addBtn = row.querySelector('.btn-add-track-playlist');
+      if (addBtn && trackObj) {
+        addBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openAddToPlaylistModal({ type: 'track', track: trackObj });
+        });
+      }
+    });
+
+    return card;
+  }
+
+  // --- Artist Detail View (Albums with Track Sub-rows) ---
+  async function showArtistDetail(artistName) {
+    state.activeArtist = artistName;
+    switchView('artist-detail', true);
+
+    const titleEl = document.getElementById('artist-detail-title');
+    const metaEl = document.getElementById('artist-detail-meta');
+    if (titleEl) titleEl.textContent = artistName;
+    if (metaEl) metaEl.textContent = 'Loading albums & tracks...';
+
+    if (artistAlbumsList) {
+      artistAlbumsList.innerHTML = '<div class="empty-queue-msg">Loading artist tracks...</div>';
+    }
+
+    const tracksData = await api(`/api/tracks?artist=${encodeURIComponent(artistName)}`);
+    const tracks = tracksData ? tracksData.tracks : [];
+
+    if (tracks.length === 0) {
+      if (metaEl) metaEl.textContent = '0 Albums • 0 Tracks';
+      if (artistAlbumsList) artistAlbumsList.innerHTML = `<div class="empty-queue-msg">No tracks found for ${artistName}.</div>`;
+      return;
+    }
+
+    // Group tracks by album
+    const albumGroups = new Map();
+    tracks.forEach(t => {
+      const albName = t.album || 'Unknown Album';
+      if (!albumGroups.has(albName)) {
+        albumGroups.set(albName, {
+          album: albName,
+          artist: artistName,
+          year: t.year || null,
+          decade: t.decade || null,
+          genre: t.genre || null,
+          cover_hash: t.cover_hash || null,
+          tracks: []
+        });
+      }
+      const grp = albumGroups.get(albName);
+      if (!grp.cover_hash && t.cover_hash) grp.cover_hash = t.cover_hash;
+      if (!grp.year && t.year) grp.year = t.year;
+      grp.tracks.push(t);
+    });
+
+    const albumList = Array.from(albumGroups.values());
+    if (metaEl) {
+      metaEl.textContent = `${albumList.length} Album${albumList.length === 1 ? '' : 's'} • ${tracks.length} Track${tracks.length === 1 ? '' : 's'}`;
+    }
+
+    if (artistAlbumsList) {
+      artistAlbumsList.innerHTML = '';
+      albumList.forEach(alb => {
+        alb.tracks.sort((a, b) => (a.track_no || 0) - (b.track_no || 0));
+        const card = createAlbumRowCard(alb, alb.tracks, { allowArtistClick: false });
+        artistAlbumsList.appendChild(card);
+      });
+    }
+
+    highlightActiveTrack();
+    syncShuffleUI();
+  }
+
+  // --- Album Detail View (Single Album with Track Sub-rows) ---
+  async function showAlbumDetail(albumName, artistName) {
+    state.activeAlbumDetail = { album: albumName, artist: artistName };
+    switchView('album-detail', true);
+
+    const titleEl = document.getElementById('album-detail-title');
+    const metaEl = document.getElementById('album-detail-meta');
+    if (titleEl) titleEl.textContent = albumName;
+    if (metaEl) metaEl.textContent = `Album by ${artistName}`;
+
+    if (albumDetailContent) {
+      albumDetailContent.innerHTML = '<div class="empty-queue-msg">Loading album tracks...</div>';
+    }
+
+    const tracksData = await api(`/api/tracks?album=${encodeURIComponent(albumName)}&artist=${encodeURIComponent(artistName)}`);
+    const tracks = tracksData ? tracksData.tracks : [];
+
+    if (tracks.length === 0) {
+      if (albumDetailContent) albumDetailContent.innerHTML = `<div class="empty-queue-msg">No tracks found for this album.</div>`;
+      return;
+    }
+
+    tracks.sort((a, b) => (a.track_no || 0) - (b.track_no || 0));
+
+    const albInfo = {
+      album: albumName,
+      artist: artistName,
+      year: tracks[0].year || null,
+      decade: tracks[0].decade || null,
+      genre: tracks[0].genre || null,
+      cover_hash: tracks.find(t => t.cover_hash)?.cover_hash || null
+    };
+
+    if (albumDetailContent) {
+      albumDetailContent.innerHTML = '';
+      const card = createAlbumRowCard(albInfo, tracks, { allowArtistClick: true });
+      albumDetailContent.appendChild(card);
+    }
+
+    highlightActiveTrack();
+    syncShuffleUI();
+
+    if (state.currentTrack) {
+      setTimeout(() => {
+        const activeRow = albumDetailContent.querySelector(`.subtrack-row[data-track-id="${state.currentTrack.id}"]`);
+        if (activeRow) {
+          activeRow.classList.add('active-track');
+          activeRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
   }
 
   // Show album tracks in tracks view without creating filter pills
@@ -983,16 +1404,8 @@
       `;
 
       card.onclick = () => {
-        // EXCLUSIVE: Selecting artist clears decade, genre, and album!
-        state.filters.artist = art.artist;
-        state.filters.decade = null;
-        state.filters.genre = null;
-        state.filters.album = null;
-        renderDecades();
-        renderGenres();
-        switchView('albums');
-        updateActiveFilterPills();
-        reloadActiveView();
+        pushNavHistory({ type: 'artists', selectedArtist: art.artist, scrollTop: contentBody.scrollTop });
+        showArtistDetail(art.artist);
       };
 
       artistsGrid.appendChild(card);
@@ -1383,14 +1796,24 @@
   }
 
   function highlightActiveTrack() {
-    document.querySelectorAll('.tracks-table tr').forEach(tr => tr.classList.remove('active-track'));
+    document.querySelectorAll('.tracks-table tr, .subtrack-row').forEach(tr => tr.classList.remove('active-track'));
+    document.querySelectorAll('.album-row-card').forEach(card => card.classList.remove('active-album'));
     if (!state.currentTrack) return;
 
-    const rows = tracksList.querySelectorAll('tr');
-    state.tracks.forEach((t, i) => {
-      if (t.id === state.currentTrack.id && rows[i]) {
-        rows[i].classList.add('active-track');
-      }
+    if (tracksList) {
+      const rows = tracksList.querySelectorAll('tr');
+      state.tracks.forEach((t, i) => {
+        if (t.id === state.currentTrack.id && rows[i]) {
+          rows[i].classList.add('active-track');
+        }
+      });
+    }
+
+    // Highlight in subtrack rows and album row cards
+    document.querySelectorAll(`.subtrack-row[data-track-id="${state.currentTrack.id}"]`).forEach(r => {
+      r.classList.add('active-track');
+      const card = r.closest('.album-row-card');
+      if (card) card.classList.add('active-album');
     });
   }
 
@@ -1430,8 +1853,9 @@
   // View Switching
   function switchView(viewName, skipReload = false) {
     state.activeView = viewName;
+    const parentNavView = viewName === 'artist-detail' ? 'artists' : (viewName === 'album-detail' ? 'albums' : viewName);
     document.querySelectorAll('.nav-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.view === viewName);
+      btn.classList.toggle('active', btn.dataset.view === parentNavView);
     });
     document.querySelectorAll('.view-panel').forEach(panel => {
       panel.classList.toggle('active', panel.id === `view-${viewName}`);
@@ -1547,7 +1971,8 @@
 
   btnShuffle.addEventListener('click', () => {
     state.isShuffle = !state.isShuffle;
-    btnShuffle.classList.toggle('active', state.isShuffle);
+    syncShuffleUI();
+    showToast(state.isShuffle ? 'Shuffle: ON' : 'Shuffle: OFF (Normal track order)');
   });
 
   btnRepeat.addEventListener('click', () => {
@@ -1566,6 +1991,9 @@
   // Navigation Links
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      state.navHistory = [];
+      state.activeArtist = null;
+      state.activeAlbumDetail = null;
       if (btn.dataset.view === 'tracks') {
         state.activeAlbumScope = null;
         const titleEl = document.getElementById('tracks-view-title');
@@ -1669,15 +2097,46 @@
     }, 1500);
   });
 
-  // 1. If playing an album, clicking the thumbnail shows that album's tracks
+  // 1. If playing an album or track, clicking the player cover brings the user to that album with filters cleared
   if (playerCoverBox) {
-    playerCoverBox.title = "View album tracks";
+    playerCoverBox.title = "Go to Album";
     playerCoverBox.addEventListener('click', () => {
-      if (state.currentTrack && state.currentTrack.album) {
-        showAlbumTracks(state.currentTrack.album, state.currentTrack.artist, state.currentTrack.id);
+      if (!state.currentTrack) return;
+      if (!state.currentTrack.album) {
+        showToast('No album information for this track');
+        return;
       }
+
+      // Clear all active filters and search
+      state.filters.decade = null;
+      state.filters.genre = null;
+      state.filters.search = '';
+      state.filters.artist = null;
+      state.filters.album = null;
+      state.activeAlbumScope = null;
+      const titleEl = document.getElementById('tracks-view-title');
+      if (titleEl) titleEl.textContent = 'Tracks';
+      if (searchInput) searchInput.value = '';
+      if (searchClearBtn) searchClearBtn.style.display = 'none';
+      document.querySelectorAll('.selected-card').forEach(el => el.classList.remove('selected-card'));
+      renderDecades();
+      renderGenres();
+      updateActiveFilterPills();
+
+      pushNavHistory({ type: state.activeView, scrollTop: contentBody.scrollTop, filtersCleared: true });
+      showAlbumDetail(state.currentTrack.album, state.currentTrack.artist);
     });
   }
+
+  // Click delegation for genre badges anywhere in cards, tables, or album rows
+  document.addEventListener('click', (e) => {
+    const badge = e.target.closest('.badge-genre');
+    if (badge) {
+      e.stopPropagation();
+      const genre = badge.textContent.trim();
+      handleGenreSelection(genre);
+    }
+  });
 
   // 2. If playing a song, clicking the song details shows the tracks window without filter and the current song selected
   const playerDetails = document.querySelector('.player-details');
@@ -1746,6 +2205,68 @@
       }
 
       showToast(`Shuffled ${state.tracks.length} tracks`);
+    });
+  }
+
+  // 4. Shuffle on the Albums grid
+  if (btnAlbumsShuffle) {
+    btnAlbumsShuffle.addEventListener('click', () => {
+      if (!state.albums || state.albums.length === 0) return;
+      for (let i = state.albums.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [state.albums[i], state.albums[j]] = [state.albums[j], state.albums[i]];
+      }
+      state.isAlbumsShuffled = true;
+      btnAlbumsShuffle.classList.add('active');
+      renderAlbums();
+      showToast(`Shuffled ${state.albums.length} albums`);
+    });
+  }
+
+  // 5. Shuffle on the Artists grid
+  if (btnArtistsShuffle) {
+    btnArtistsShuffle.addEventListener('click', () => {
+      if (!state.artists || state.artists.length === 0) return;
+      for (let i = state.artists.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [state.artists[i], state.artists[j]] = [state.artists[j], state.artists[i]];
+      }
+      state.isArtistsShuffled = true;
+      btnArtistsShuffle.classList.add('active');
+      renderArtists();
+      showToast(`Shuffled ${state.artists.length} artists`);
+    });
+  }
+
+  // 6. Navigation Back buttons
+  if (btnBackArtistDetail) {
+    btnBackArtistDetail.addEventListener('click', () => goBack());
+  }
+
+  if (btnBackAlbumDetail) {
+    btnBackAlbumDetail.addEventListener('click', () => goBack());
+  }
+
+  // 7. Shuffle active album inside Artist detail view
+  if (btnArtistActiveShuffle) {
+    btnArtistActiveShuffle.addEventListener('click', () => {
+      if (!artistAlbumsList) return;
+      let activeCard = artistAlbumsList.querySelector('.album-row-card.active-album') || artistAlbumsList.querySelector('.album-row-card');
+      if (!activeCard) {
+        showToast('No album available to shuffle');
+        return;
+      }
+      const albShuffleBtn = activeCard.querySelector('.btn-album-row-shuffle');
+      if (albShuffleBtn) albShuffleBtn.click();
+    });
+  }
+
+  // 8. Shuffle inside Album detail view
+  if (btnAlbumDetailShuffle) {
+    btnAlbumDetailShuffle.addEventListener('click', () => {
+      if (!albumDetailContent) return;
+      const albShuffleBtn = albumDetailContent.querySelector('.btn-album-row-shuffle');
+      if (albShuffleBtn) albShuffleBtn.click();
     });
   }
 
