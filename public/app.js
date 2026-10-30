@@ -1675,9 +1675,49 @@
   });
 
   // Queue & Playback Functions
+  function applyShuffleQueue(enableShuffle) {
+    if (enableShuffle) {
+      if (!state.unshuffledQueue || state.unshuffledQueue.length === 0) {
+        state.unshuffledQueue = [...state.queue];
+      }
+      const currentTrack = state.currentTrack || state.queue[state.queueIndex];
+      const otherTracks = state.queue.filter(t => !currentTrack || String(t.id) !== String(currentTrack.id));
+      for (let i = otherTracks.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [otherTracks[i], otherTracks[j]] = [otherTracks[j], otherTracks[i]];
+      }
+      state.queue = currentTrack ? [currentTrack, ...otherTracks] : otherTracks;
+      state.queueIndex = 0;
+    } else {
+      if (state.unshuffledQueue && state.unshuffledQueue.length > 0) {
+        const currentTrack = state.currentTrack || state.queue[state.queueIndex];
+        state.queue = [...state.unshuffledQueue];
+        if (currentTrack) {
+          const found = state.queue.findIndex(t => String(t.id) === String(currentTrack.id));
+          state.queueIndex = found !== -1 ? found : 0;
+        }
+        state.unshuffledQueue = null;
+      }
+    }
+    updateQueueDrawer();
+    window.dispatchEvent(new CustomEvent('playa:playerupdate'));
+  }
+
   function setQueue(tracks, startIndex = 0) {
-    state.queue = [...tracks];
-    state.queueIndex = startIndex;
+    state.unshuffledQueue = [...tracks];
+    if (state.isShuffle) {
+      const selectedTrack = tracks[startIndex] || tracks[0];
+      const otherTracks = tracks.filter((_, idx) => idx !== startIndex);
+      for (let i = otherTracks.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [otherTracks[i], otherTracks[j]] = [otherTracks[j], otherTracks[i]];
+      }
+      state.queue = selectedTrack ? [selectedTrack, ...otherTracks] : otherTracks;
+      state.queueIndex = 0;
+    } else {
+      state.queue = [...tracks];
+      state.queueIndex = startIndex;
+    }
     updateQueueDrawer();
     playTrack(state.queue[state.queueIndex]);
   }
@@ -1733,13 +1773,7 @@
 
   function playNext() {
     if (state.queue.length === 0) return;
-
-    if (state.isShuffle) {
-      state.queueIndex = Math.floor(Math.random() * state.queue.length);
-    } else {
-      state.queueIndex = (state.queueIndex + 1) % state.queue.length;
-    }
-
+    state.queueIndex = (state.queueIndex + 1) % state.queue.length;
     playTrack(state.queue[state.queueIndex]);
     updateQueueDrawer();
   }
@@ -1763,6 +1797,7 @@
     playNext,
     playPrev,
     togglePlay,
+    applyShuffleQueue,
     get state() { return state; },
     get analyser() { return analyser; },
     ensureAudio() {
