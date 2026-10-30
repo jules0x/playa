@@ -535,7 +535,7 @@ fastify.get("/api/genres", async (req) => {
     ${whereClause}
     ${whereClause ? "AND" : "WHERE"} tracks.genre IS NOT NULL
     GROUP BY tracks.genre
-    ORDER BY track_count DESC, tracks.genre ASC
+    ORDER BY tracks.genre COLLATE NOCASE ASC
   `;
   return db.prepare(sql).all(params);
 });

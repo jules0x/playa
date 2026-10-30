@@ -615,7 +615,10 @@
   // Render Genres in Sidebar (with data attributes)
   function renderGenres() {
     genresContainer.innerHTML = '';
-    state.genres.forEach(g => {
+    const sorted = [...(state.genres || [])].sort((a, b) =>
+      (a.genre || '').localeCompare(b.genre || '', undefined, { sensitivity: 'base' })
+    );
+    sorted.forEach(g => {
       const count = getPillCount(g);
       const badge = document.createElement('div');
       badge.className = `genre-badge ${state.filters.genre === g.genre ? 'active' : ''} ${count === 0 ? 'zero-count' : ''}`;
@@ -2278,7 +2281,7 @@
     if (toggleQueueBtn) toggleQueueBtn.classList.remove('active');
   });
 
-  // Collapsible Sidebar Sections
+    // Collapsible Sidebar Sections
   function initCollapsibleSidebar() {
     let saved = {};
     try {
@@ -2287,11 +2290,18 @@
       saved = {};
     }
 
+    // Default collapsed sections (e.g. decades collapsed on initial load)
+    const defaultCollapsed = { decades: true };
+
     document.querySelectorAll('.sidebar-section.collapsible').forEach(section => {
       const sectionKey = section.dataset.section;
-      if (sectionKey && saved[sectionKey]) {
-        section.classList.add('collapsed');
-      }
+      const shouldCollapse = (sectionKey && saved[sectionKey] !== undefined)
+        ? !!saved[sectionKey]
+        : (sectionKey && defaultCollapsed[sectionKey] !== undefined)
+          ? !!defaultCollapsed[sectionKey]
+          : section.classList.contains('collapsed');
+
+      section.classList.toggle('collapsed', shouldCollapse);
 
       const titleWrap = section.querySelector('.section-title-wrap');
       if (titleWrap) {
