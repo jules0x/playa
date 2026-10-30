@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { S3Client, GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { S3Client, GetObjectCommand, ListObjectsV2Command, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 function getCredentials() {
@@ -124,4 +124,26 @@ export async function listSpacesAudioFiles(prefix = "") {
   } while (continuationToken);
 
   return files;
+}
+
+// Upload a cover image buffer or stream to Spaces covers/ prefix
+export async function uploadSpacesCover(hash, data, mimeType = "image/jpeg") {
+  const client = getS3Client();
+  if (!client) return false;
+  const { BUCKET } = getCredentials();
+
+  try {
+    await client.send(
+      new PutObjectCommand({
+        Bucket: BUCKET,
+        Key: `covers/${hash}.jpg`,
+        Body: data,
+        ContentType: mimeType
+      })
+    );
+    return true;
+  } catch (err) {
+    console.warn(`[Warning] Failed to upload cover ${hash} to Spaces:`, err.message);
+    return false;
+  }
 }

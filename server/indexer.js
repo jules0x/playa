@@ -5,7 +5,7 @@ import * as mm from "music-metadata";
 import "dotenv/config";
 import { GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { db, initDatabase } from "./db.js";
-import { getS3Client, getBucketName, isSpacesConfigured } from "./s3.js";
+import { getS3Client, getBucketName, isSpacesConfigured, uploadSpacesCover } from "./s3.js";
 
 const DATA_DIR = process.env.DATA_DIR || path.resolve("./data");
 const COVERS_DIR = path.join(DATA_DIR, "covers");
@@ -332,6 +332,7 @@ export async function scanSpacesBucket(options = {}) {
           if (!fs.existsSync(coverPath)) {
             fs.writeFileSync(coverPath, data);
           }
+          uploadSpacesCover(hash, data).catch(() => {});
           albumCoverCache.set(folderDir, hash);
           return hash;
         }
@@ -369,6 +370,7 @@ export async function scanSpacesBucket(options = {}) {
             if (!fs.existsSync(coverPath)) {
               fs.writeFileSync(coverPath, data);
             }
+            uploadSpacesCover(hash, data).catch(() => {});
             albumCoverCache.set(folderDir, hash);
             return hash;
           }
@@ -522,6 +524,7 @@ export async function scanSpacesBucket(options = {}) {
           if (!fs.existsSync(coverPath)) {
             fs.writeFileSync(coverPath, picData);
           }
+          uploadSpacesCover(hash, picData).catch(() => {});
           coverHash = hash;
           albumCoverCache.set(item.dir, hash);
         }
