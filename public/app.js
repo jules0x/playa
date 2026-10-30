@@ -39,7 +39,9 @@
     playlists: [],
     pendingAddToPlaylist: null, // holds { type: 'track'|'album', data: ... }
     albumSort: localStorage.getItem('playa:albums-sort') || 'year_desc',
-    albumGridCols: localStorage.getItem('playa:albums-grid-cols') || 'auto'
+    albumGridCols: localStorage.getItem('playa:albums-grid-cols') || 'auto',
+    albumsViewMode: localStorage.getItem('playa:albums-view-mode') || 'grid',
+    artistsViewMode: localStorage.getItem('playa:artists-view-mode') || 'grid'
   };
 
   // DOM Elements
@@ -816,12 +818,72 @@
   function setAlbumsGridCols(cols) {
     state.albumGridCols = cols;
     try { localStorage.setItem('playa:albums-grid-cols', cols); } catch (e) {}
-    if (albumsGrid) {
+    if (albumsGrid && state.albumsViewMode !== 'list') {
       albumsGrid.dataset.grid = cols;
     }
     document.querySelectorAll('#albums-grid-density .grid-col-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.cols === cols);
     });
+  }
+
+  // View Layout Modes (Grid vs List)
+  function setAlbumsViewMode(mode) {
+    state.albumsViewMode = mode === 'list' ? 'list' : 'grid';
+    try { localStorage.setItem('playa:albums-view-mode', state.albumsViewMode); } catch (e) {}
+
+    document.querySelectorAll('#albums-view-mode-toggle .view-mode-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === state.albumsViewMode);
+    });
+
+    const colsCtrl = document.getElementById('albums-grid-columns-ctrl');
+    if (colsCtrl) {
+      colsCtrl.style.display = state.albumsViewMode === 'list' ? 'none' : '';
+    }
+
+    renderAlbums();
+  }
+
+  function setArtistsViewMode(mode) {
+    state.artistsViewMode = mode === 'list' ? 'list' : 'grid';
+    try { localStorage.setItem('playa:artists-view-mode', state.artistsViewMode); } catch (e) {}
+
+    document.querySelectorAll('#artists-view-mode-toggle .view-mode-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === state.artistsViewMode);
+    });
+
+    renderArtists();
+  }
+
+  function initViewModeControls() {
+    // Albums View Mode Toggle
+    const albumsToggle = document.getElementById('albums-view-mode-toggle');
+    if (albumsToggle) {
+      albumsToggle.querySelectorAll('.view-mode-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === state.albumsViewMode);
+      });
+      const colsCtrl = document.getElementById('albums-grid-columns-ctrl');
+      if (colsCtrl) {
+        colsCtrl.style.display = state.albumsViewMode === 'list' ? 'none' : '';
+      }
+      albumsToggle.addEventListener('click', (e) => {
+        const btn = e.target.closest('.view-mode-btn');
+        if (!btn || !btn.dataset.mode) return;
+        setAlbumsViewMode(btn.dataset.mode);
+      });
+    }
+
+    // Artists View Mode Toggle
+    const artistsToggle = document.getElementById('artists-view-mode-toggle');
+    if (artistsToggle) {
+      artistsToggle.querySelectorAll('.view-mode-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === state.artistsViewMode);
+      });
+      artistsToggle.addEventListener('click', (e) => {
+        const btn = e.target.closest('.view-mode-btn');
+        if (!btn || !btn.dataset.mode) return;
+        setArtistsViewMode(btn.dataset.mode);
+      });
+    }
   }
 
   function initAlbumControls() {
@@ -848,7 +910,7 @@
     }
   }
 
-  // Render Albums Grid
+  // Render Albums (Grid or List)
   function renderAlbums() {
     albumsGrid.innerHTML = '';
     const metaEl = document.getElementById('albums-header-meta');
@@ -859,56 +921,123 @@
       return;
     }
 
+    const isList = state.albumsViewMode === 'list';
+    if (isList) {
+      albumsGrid.className = 'albums-list-container';
+      delete albumsGrid.dataset.grid;
+    } else {
+      albumsGrid.className = 'albums-grid';
+      albumsGrid.dataset.grid = state.albumGridCols;
+    }
+
     state.albums.forEach(alb => {
-      const card = document.createElement('div');
-      card.className = 'album-card';
       const coverUrl = `/api/cover/${alb.cover_hash || 'default'}`;
 
-      card.innerHTML = `
-        <div class="album-art-wrap">
-          <img src="${coverUrl}" alt="${alb.album}" class="img-lazy" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.src='/api/cover/default'; this.classList.add('loaded');">
-          <button class="album-add-playlist-btn" title="Add Album to Playlist">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          </button>
-          <div class="play-album-overlay" title="Play Album">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+      if (isList) {
+        const row = document.createElement('div');
+        row.className = 'album-list-row';
+        row.innerHTML = `
+          <div class="album-list-thumb-wrap">
+            <img src="${coverUrl}" alt="${alb.album}" class="album-list-thumb img-lazy" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.src='/api/cover/default'; this.classList.add('loaded');">
+            <button class="album-list-play-btn" title="Play Album">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            </button>
           </div>
-        </div>
-        <div class="album-card-title" title="${alb.album}">${alb.album}</div>
-        <div class="album-card-artist" title="${alb.artist}">${alb.artist}</div>
-        <div class="album-card-badges">
-          <span class="badge-decade">${alb.year || alb.decade || 'N/A'}</span>
-          <span class="badge-genre">${alb.genre || 'Underground'}</span>
-        </div>
-      `;
+          <div class="album-list-info">
+            <div class="album-list-title" title="${alb.album}">${alb.album}</div>
+            <div class="album-list-artist" title="${alb.artist}">${alb.artist}</div>
+          </div>
+          <div class="album-list-meta">
+            <span class="badge-decade">${alb.year || alb.decade || 'N/A'}</span>
+            <span class="badge-genre">${alb.genre || 'Underground'}</span>
+            <span class="album-list-tracks-badge">${alb.track_count || 0} track${(alb.track_count === 1) ? '' : 's'}</span>
+          </div>
+          <div class="album-list-actions">
+            <button class="album-list-add-btn" title="Add Album to Playlist">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+            <div class="album-list-chevron" title="View Album">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+          </div>
+        `;
 
-      // Play whole album
-      const playBtn = card.querySelector('.play-album-overlay');
-      playBtn.onclick = async (e) => {
-        e.stopPropagation();
-        const tracksData = await api(`/api/tracks?album=${encodeURIComponent(alb.album)}&artist=${encodeURIComponent(alb.artist)}`);
-        if (tracksData && tracksData.tracks.length > 0) {
-          state.playbackContext = { type: 'album', album: alb.album, artist: alb.artist };
-          setQueue(tracksData.tracks, 0);
+        const playBtn = row.querySelector('.album-list-play-btn');
+        if (playBtn) {
+          playBtn.onclick = async (e) => {
+            e.stopPropagation();
+            const tracksData = await api(`/api/tracks?album=${encodeURIComponent(alb.album)}&artist=${encodeURIComponent(alb.artist)}`);
+            if (tracksData && tracksData.tracks.length > 0) {
+              state.playbackContext = { type: 'album', album: alb.album, artist: alb.artist };
+              setQueue(tracksData.tracks, 0);
+            }
+          };
         }
-      };
 
-      // Add album to playlist
-      const addPlBtn = card.querySelector('.album-add-playlist-btn');
-      if (addPlBtn) {
-        addPlBtn.onclick = (e) => {
-          e.stopPropagation();
-          openAddToPlaylistModal({ type: 'album', album: alb });
+        const addPlBtn = row.querySelector('.album-list-add-btn');
+        if (addPlBtn) {
+          addPlBtn.onclick = (e) => {
+            e.stopPropagation();
+            openAddToPlaylistModal({ type: 'album', album: alb });
+          };
+        }
+
+        row.onclick = () => {
+          pushNavHistory({ type: 'albums', selectedAlbum: alb.album, scrollTop: contentBody.scrollTop });
+          showAlbumDetail(alb.album, alb.artist);
         };
+
+        albumsGrid.appendChild(row);
+      } else {
+        const card = document.createElement('div');
+        card.className = 'album-card';
+
+        card.innerHTML = `
+          <div class="album-art-wrap">
+            <img src="${coverUrl}" alt="${alb.album}" class="img-lazy" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.src='/api/cover/default'; this.classList.add('loaded');">
+            <button class="album-add-playlist-btn" title="Add Album to Playlist">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+            <div class="play-album-overlay" title="Play Album">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            </div>
+          </div>
+          <div class="album-card-title" title="${alb.album}">${alb.album}</div>
+          <div class="album-card-artist" title="${alb.artist}">${alb.artist}</div>
+          <div class="album-card-badges">
+            <span class="badge-decade">${alb.year || alb.decade || 'N/A'}</span>
+            <span class="badge-genre">${alb.genre || 'Underground'}</span>
+          </div>
+        `;
+
+        // Play whole album
+        const playBtn = card.querySelector('.play-album-overlay');
+        playBtn.onclick = async (e) => {
+          e.stopPropagation();
+          const tracksData = await api(`/api/tracks?album=${encodeURIComponent(alb.album)}&artist=${encodeURIComponent(alb.artist)}`);
+          if (tracksData && tracksData.tracks.length > 0) {
+            state.playbackContext = { type: 'album', album: alb.album, artist: alb.artist };
+            setQueue(tracksData.tracks, 0);
+          }
+        };
+
+        // Add album to playlist
+        const addPlBtn = card.querySelector('.album-add-playlist-btn');
+        if (addPlBtn) {
+          addPlBtn.onclick = (e) => {
+            e.stopPropagation();
+            openAddToPlaylistModal({ type: 'album', album: alb });
+          };
+        }
+
+        // Card click opens album detail with cover on left and tracks on right
+        card.onclick = () => {
+          pushNavHistory({ type: 'albums', selectedAlbum: alb.album, scrollTop: contentBody.scrollTop });
+          showAlbumDetail(alb.album, alb.artist);
+        };
+
+        albumsGrid.appendChild(card);
       }
-
-      // Card click opens album detail with cover on left and tracks on right
-      card.onclick = () => {
-        pushNavHistory({ type: 'albums', selectedAlbum: alb.album, scrollTop: contentBody.scrollTop });
-        showAlbumDetail(alb.album, alb.artist);
-      };
-
-      albumsGrid.appendChild(card);
     });
   }
 
@@ -1387,29 +1516,72 @@
     });
   }
 
-  // Render Artists Grid (Exclusive Artist Filter)
+  // Render Artists (Grid or List)
   function renderArtists() {
     artistsGrid.innerHTML = '';
     const metaEl = document.getElementById('artists-header-meta');
     metaEl.textContent = `All Artists (${state.artists.length})`;
 
+    if (state.artists.length === 0) {
+      artistsGrid.innerHTML = `<div class="empty-queue-msg">No artists found matching active filters.</div>`;
+      return;
+    }
+
+    const isList = state.artistsViewMode === 'list';
+    if (isList) {
+      artistsGrid.className = 'artists-list-container';
+    } else {
+      artistsGrid.className = 'artists-grid';
+    }
+
     state.artists.forEach(art => {
-      const card = document.createElement('div');
-      card.className = 'artist-card';
       const coverUrl = `/api/cover/${art.cover_hash || 'default'}`;
 
-      card.innerHTML = `
-        <img src="${coverUrl}" class="artist-avatar img-lazy" alt="${art.artist}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.src='/api/cover/default'; this.classList.add('loaded');">
-        <div class="artist-name">${art.artist}</div>
-        <div class="artist-sub">${art.album_count} Albums • ${art.track_count} Tracks</div>
-      `;
+      if (isList) {
+        const row = document.createElement('div');
+        row.className = 'artist-list-row';
+        row.innerHTML = `
+          <div class="artist-list-avatar-wrap">
+            <img src="${coverUrl}" class="artist-list-avatar img-lazy" alt="${art.artist}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.src='/api/cover/default'; this.classList.add('loaded');">
+          </div>
+          <div class="artist-list-info">
+            <div class="artist-list-name">${art.artist}</div>
+            <div class="artist-list-sub">${art.album_count} Album${art.album_count === 1 ? '' : 's'} • ${art.track_count} Track${art.track_count === 1 ? '' : 's'}</div>
+          </div>
+          <div class="artist-list-meta">
+            <span class="artist-list-badge">${art.album_count} Album${art.album_count === 1 ? '' : 's'}</span>
+            <span class="artist-list-badge tracks-badge">${art.track_count} Track${art.track_count === 1 ? '' : 's'}</span>
+          </div>
+          <div class="artist-list-actions">
+            <div class="artist-list-chevron" title="View Artist">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+          </div>
+        `;
 
-      card.onclick = () => {
-        pushNavHistory({ type: 'artists', selectedArtist: art.artist, scrollTop: contentBody.scrollTop });
-        showArtistDetail(art.artist);
-      };
+        row.onclick = () => {
+          pushNavHistory({ type: 'artists', selectedArtist: art.artist, scrollTop: contentBody.scrollTop });
+          showArtistDetail(art.artist);
+        };
 
-      artistsGrid.appendChild(card);
+        artistsGrid.appendChild(row);
+      } else {
+        const card = document.createElement('div');
+        card.className = 'artist-card';
+
+        card.innerHTML = `
+          <img src="${coverUrl}" class="artist-avatar img-lazy" alt="${art.artist}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.src='/api/cover/default'; this.classList.add('loaded');">
+          <div class="artist-name">${art.artist}</div>
+          <div class="artist-sub">${art.album_count} Albums • ${art.track_count} Tracks</div>
+        `;
+
+        card.onclick = () => {
+          pushNavHistory({ type: 'artists', selectedArtist: art.artist, scrollTop: contentBody.scrollTop });
+          showArtistDetail(art.artist);
+        };
+
+        artistsGrid.appendChild(card);
+      }
     });
   }
 
@@ -2506,10 +2678,11 @@
     window.PlayaCloseMobileSidebar = closeMobileSidebar;
   }
 
-  // Initialize Collapsible Sidebar Filters, Mobile Controls & Album View Controls
+  // Initialize Collapsible Sidebar Filters, Mobile Controls, Album View Controls & View Modes
   initCollapsibleSidebar();
   initMobileControls();
   initAlbumControls();
+  initViewModeControls();
 
   // Boot Application with Vault Authentication
   checkAuthAndBoot();

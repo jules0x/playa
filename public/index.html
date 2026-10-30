@@ -198,8 +198,22 @@
                 </select>
               </div>
 
+              <!-- View Mode Toggle (Grid / List) -->
+              <div class="view-mode-control" title="View Layout">
+                <div class="view-mode-pill-group" id="albums-view-mode-toggle">
+                  <button class="view-mode-btn active" data-mode="grid" title="Grid View">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    <span>Grid</span>
+                  </button>
+                  <button class="view-mode-btn" data-mode="list" title="List View">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                    <span>List</span>
+                  </button>
+                </div>
+              </div>
+
               <!-- Grid Layout Columns Selector -->
-              <div class="grid-layout-control" title="Grid Columns">
+              <div class="grid-layout-control" title="Grid Columns" id="albums-grid-columns-ctrl">
                 <span class="ctrl-label">Columns:</span>
                 <div class="grid-cols-pill-group" id="albums-grid-density">
                   <button class="grid-col-btn" data-cols="3" title="3 Columns (Spacious)">3</button>
@@ -264,6 +278,19 @@
               <div class="view-meta" id="artists-header-meta">All Artists</div>
             </div>
             <div class="view-header-actions">
+              <!-- View Mode Toggle (Grid / List) -->
+              <div class="view-mode-control" title="View Layout">
+                <div class="view-mode-pill-group" id="artists-view-mode-toggle">
+                  <button class="view-mode-btn active" data-mode="grid" title="Grid View">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    <span>Grid</span>
+                  </button>
+                  <button class="view-mode-btn" data-mode="list" title="List View">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                    <span>List</span>
+                  </button>
+                </div>
+              </div>
               <button class="btn-tracks-shuffle" id="btn-artists-shuffle" title="Shuffle displayed artists">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
                 <span>Shuffle Order</span>

@@ -251,6 +251,29 @@ html[data-skin="aurora"] .view-select option {
   color: #e2e8f0;
 }
 
+html[data-skin="aurora"] .view-mode-pill-group {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+html[data-skin="aurora"] .view-mode-btn {
+  color: rgba(224, 231, 255, 0.65);
+}
+
+html[data-skin="aurora"] .view-mode-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+html[data-skin="aurora"] .view-mode-btn.active {
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.9), rgba(196, 181, 253, 0.9));
+  color: #1e1b4b;
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(129, 140, 248, 0.4);
+}
+
 html[data-skin="aurora"] .grid-cols-pill-group {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.1);
@@ -383,6 +406,51 @@ html[data-skin="aurora"] .artist-card:hover {
 html[data-skin="aurora"] .artist-avatar {
   border: 2px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.12), 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ---------- Albums & Artists List Views in Aurora ---------- */
+html[data-skin="aurora"] .album-list-row,
+html[data-skin="aurora"] .artist-list-row {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top-color: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+html[data-skin="aurora"] .album-list-row:hover,
+html[data-skin="aurora"] .artist-list-row:hover {
+  border-color: rgba(199, 210, 254, 0.35);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.035));
+  box-shadow: 0 8px 24px rgba(5, 4, 20, 0.4), 0 0 24px rgba(129, 140, 248, 0.18);
+}
+
+html[data-skin="aurora"] .album-list-thumb-wrap {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+html[data-skin="aurora"] .album-list-add-btn {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(224, 231, 255, 0.7);
+}
+
+html[data-skin="aurora"] .album-list-add-btn:hover {
+  border-color: rgba(199, 210, 254, 0.4);
+  color: #fff;
+  background: rgba(129, 140, 248, 0.18);
+  box-shadow: 0 0 12px rgba(129, 140, 248, 0.3);
+}
+
+html[data-skin="aurora"] .artist-list-avatar-wrap {
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.12), 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
+html[data-skin="aurora"] .album-list-row:hover .album-list-chevron,
+html[data-skin="aurora"] .artist-list-row:hover .artist-list-chevron {
+  color: #c7d2fe;
 }
 
 /* ---------- Playlist view ---------- */
