@@ -15,7 +15,7 @@
   let volumeVal = 0.85;
 
   function getActiveSkin() {
-    return document.documentElement.dataset.skin || 'classic';
+    return document.documentElement.dataset.skin || 'aurora';
   }
 
   function init() {

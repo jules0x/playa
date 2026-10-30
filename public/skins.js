@@ -7,8 +7,8 @@
   const DEFAULT_SKIN = 'aurora';
 
   const SKINS = [
+    { id: 'aurora', name: 'Aurora Glass', desc: 'Frosted glass, indigo aurora (Default)', swatch: 'linear-gradient(135deg, #818cf8, #c4b5fd 50%, #f0abfc)' },
     { id: 'classic', name: 'Classic Neon', desc: 'Original cyan & violet', swatch: 'linear-gradient(135deg, #00f2fe, #7f00ff)' },
-    { id: 'aurora', name: 'Aurora Glass', desc: 'Frosted glass, indigo aurora', swatch: 'linear-gradient(135deg, #818cf8, #c4b5fd 50%, #f0abfc)' },
     { id: 'hifi', name: 'Vintage Hi-Fi', desc: '1970s brushed silver & walnut receiver', swatch: 'linear-gradient(135deg, #f7f3ea 0%, #d5cec0 40%, #ffb834 60%, #3e2415 100%)' },
     { id: 'cyberdeck', name: 'Cyberdeck 20XX', desc: '16-bit Lo-Fi terminal & neon rain', swatch: 'linear-gradient(135deg, #0f051d 0%, #a855f7 50%, #06b6d4 100%)' }
   ];
